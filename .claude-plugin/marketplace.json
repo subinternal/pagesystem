@@ -1,0 +1,31 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "pagesystem",
+  "metadata": {
+    "description": "Pagesystem skills by Subinternal."
+  },
+  "owner": {
+    "name": "Subinternal",
+    "email": "gh@subinternal.com"
+  },
+  "plugins": [
+    {
+      "name": "ps",
+      "description": "Compose, verify, recover and finish web pages with Pagesystem page contracts, tokens and components: /ps:compose, /ps:verify, /ps:recover, /ps:finish.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Subinternal",
+        "email": "gh@subinternal.com"
+      },
+      "source": "./plugins/ps",
+      "category": "design",
+      "homepage": "https://pagesystem.dev",
+      "tags": [
+        "design",
+        "frontend",
+        "pages",
+        "skills"
+      ]
+    }
+  ]
+}
