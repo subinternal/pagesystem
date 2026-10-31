@@ -36,6 +36,8 @@
 
   // Colors: parse rgb()/rgba() as the browser reports them; blend a translucent color over what is behind it.
   const rgba = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const v = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return { r: v[0], g: v[1], b: v[2], a: v.length > 3 ? v[3] : 1 }; };
+  // color(srgb r g b / a), as browsers report colors mixed with color-mix() or given in srgb, in 0..1 channels.
+  const srgb = (c) => { const m = c.match(/color\(srgb\s+([^)]+)\)/); if (!m) return rgba(c); const v = m[1].split(/[\s/]+/).filter(Boolean).map(Number); return { r: v[0] * 255, g: v[1] * 255, b: v[2] * 255, a: v.length > 3 ? v[3] : 1 }; };
   const over = (top, under) => ({ r: top.r * top.a + under.r * (1 - top.a), g: top.g * top.a + under.g * (1 - top.a), b: top.b * top.a + under.b * (1 - top.a), a: 1 });
   const lum = ({ r, g, b }) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
   const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
@@ -45,8 +47,16 @@
     const layers = [];
     for (let n = el; n; n = n.parentElement) {
       const s = getComputedStyle(n);
-      if (s.backgroundImage && s.backgroundImage !== 'none') return null;
-      const c = rgba(s.backgroundColor);
+      if (s.backgroundImage && s.backgroundImage !== 'none') {
+        // A gradient whose stops are all one color is a flat tint written as a gradient: it is measured as that color.
+        const image = s.backgroundImage.replace(/,\s*none\b/g, ''); // empty layers add nothing
+        const stops = /^linear-gradient\(.*\)$/.test(image) && !/\),\s*linear-gradient/.test(image) ? [...image.matchAll(/rgba?\([^)]+\)|color\(srgb[^)]+\)/g)].map((m) => m[0]) : [];
+        const flat = stops.length > 1 && stops.every((c) => c === stops[0]) ? srgb(stops[0]) : null;
+        if (!flat) return null;
+        layers.push(flat);
+        if (flat.a >= 1) break;
+      }
+      const c = srgb(s.backgroundColor);
       if (c && c.a > 0) { layers.push(c); if (c.a >= 1) break; }
     }
     let base = { r: 255, g: 255, b: 255, a: 1 };
@@ -101,7 +111,12 @@
     const target = pointer === 'coarse' ? 44 : 36;
     const limit = options.limit ?? 600;
     let spacing = null;
+    // Under text spacing only clipping is judged: lines are meant to break differently there. Each clipping box's
+    // overflow is recorded first, so a box that already overflowed by design (a map drawn to cover its frame) is not
+    // blamed on the spacing.
+    const before = new Map();
     if (options.textSpacing) {
+      for (const el of document.body.querySelectorAll('*')) { const s = getComputedStyle(el); if (s.overflowY === 'hidden' || s.overflow === 'hidden' || s.overflowY === 'clip') before.set(el, el.scrollHeight - el.clientHeight); }
       // WCAG 1.4.12's override: content and controls must survive it without clipping or overlap.
       spacing = document.createElement('style');
       spacing.textContent = '*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}';
@@ -124,7 +139,7 @@
     // 2. Wrapping. Headings and questions never end on one word; labels, buttons and links in controls never wrap;
     //    body text never ends on one word.
     let checked = 0;
-    for (const el of all) {
+    for (const el of options.textSpacing ? [] : all) {
       if (checked > limit) break;
       const tag = el.localName;
       const isHeading = /^h[1-4]$/.test(tag) || tag === 'summary';
@@ -144,7 +159,7 @@
       const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.data.trim());
       if (!own) continue;
       const s = getComputedStyle(el);
-      const fg = rgba(s.color); const bg = ground(el);
+      const fg = srgb(s.color); const bg = ground(el);
       if (!fg) continue;
       if (!bg) { add('contrast-unmeasured', 'warn', el, { reason: 'text over an image or gradient; check it by eye' }); continue; }
       const size = parseFloat(s.fontSize); const bold = Number(s.fontWeight) >= 700;
@@ -201,7 +216,8 @@
     if (spacing) {
       for (const el of all) {
         const s = getComputedStyle(el);
-        if ((s.overflowY === 'hidden' || s.overflow === 'hidden') && el.scrollHeight > el.clientHeight + 2 && text(el)) add('clipped-with-text-spacing', 'fail', el, { scrollHeight: el.scrollHeight, height: el.clientHeight });
+        const grew = el.scrollHeight - el.clientHeight - Math.max(0, before.get(el) ?? 0);
+        if ((s.overflowY === 'hidden' || s.overflow === 'hidden' || s.overflowY === 'clip') && grew > 2 && text(el)) add('clipped-with-text-spacing', 'fail', el, { clippedBy: grew, height: el.clientHeight });
       }
       spacing.remove();
     }

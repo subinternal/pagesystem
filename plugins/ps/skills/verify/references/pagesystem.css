@@ -235,7 +235,7 @@ input,progress { accent-color: var(--primary); }
 /* Counts and amounts align on their last digit, header included. */
 .ps-table .ps-numeric { text-align: end; }
 .ps-rule { border: 0; border-top: 1px solid var(--line); width: 100%; margin: 0; }
-.ps-skip { position: absolute; top: var(--s-8); left: var(--s-8); transform: translateY(-200%); z-index: 20; background: var(--surface); padding: var(--s-8); }
+.ps-skip { position: absolute; top: var(--s-8); left: var(--s-8); transform: translateY(-200%); z-index: 20; display: inline-flex; align-items: center; min-height: var(--control-height); background: var(--surface); padding: 0 var(--s-12); }
 .ps-skip:focus { transform: none; }
 .ps-demo { padding: var(--s-24); }
 @media(max-width:480px) { .ps-demo { padding: var(--s-12); } }
@@ -1261,6 +1261,14 @@ input,progress { accent-color: var(--primary); }
   .ps-chats-row .ps-chats-actions { inset-block:auto var(--s-4); right:var(--s-4); }
   .ps-chats-actions .ps-chats-icon { width:var(--s-24); height:var(--s-24); }
   .ps-chats-row:is(:hover,:focus-within,[data-selected],[data-expanded]) .ps-chats-time { visibility:visible; }
+  /* On touch the actions keep the full touch target: the time's line is a control height tall and runs to the row's
+     bottom edge, so the three buttons sit beside the time and never over the title. */
+  @media (pointer: coarse) {
+    .ps-chats-open { padding-block-end:0; }
+    .ps-chats-time { display:flex; align-items:center; min-height:var(--control-height); }
+    .ps-chats-row .ps-chats-actions { inset-block:auto 0; right:0; }
+    .ps-chats-actions .ps-chats-icon { width:var(--control-height); height:var(--control-height); }
+  }
 }
 .ps-chats-rename { font-size:var(--text-body); }
 /* Details card. The hairline mixes from ink because --line nearly matches --raised in dark. The slot clips while it grows or collapses; its padding leaves room for the card's edge. */
