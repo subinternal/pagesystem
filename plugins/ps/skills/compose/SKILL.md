@@ -43,3 +43,7 @@ before shipping components: it explains the shared stylesheet and behaviors, whi
 are copied into the project, never read whole. All are generated from the Pagesystem library.
 Preserve the host product's visual identity; the house palette is an example,
 not a requirement. Do not claim access to a Pagesystem MCP server: it is not built.
+
+Measure the rendered page with [measure.js](references/measure.js), as [the measure guide](references/measure.md)
+explains: at 375 and 1440 wide, in each theme, and with text spacing increased. Fix every failure; fix or justify
+each warning. Report the counts before and after alongside the checks a script cannot make.
