@@ -200,7 +200,10 @@
       const s = getComputedStyle(el);
       zero.font = `${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
       const ch = zero.measureText('0').width || parseFloat(s.fontSize) * 0.5;
-      const measureCh = el.getBoundingClientRect().width / ch;
+      // A paragraph laid out as a grid or flex row (a label beside its text) is read column by column: measure the
+      // widest column, not the row.
+      const columns = /^(inline-)?(grid|flex)$/.test(s.display) ? [...el.children].filter(visible) : [el];
+      const measureCh = Math.max(...(columns.length ? columns : [el]).map((c) => c.getBoundingClientRect().width)) / ch;
       if (measureCh > 80) add('measure-too-wide', 'warn', el, { characters: Math.round(measureCh), house: 65 });
     }
 
