@@ -1,8 +1,8 @@
 # Relationship map (relationship-map)
 
-Kind: component. Explore direct and indirect dependencies with a selectable visual topology.
+Kind: component. A service's dependencies as a tree: direct ones beside the source, indirect ones beside their own parent, each with its kind and status in text.
 
-Task: Explore direct and indirect dependencies with a selectable visual topology.
+Task: See what a service depends on, directly and indirectly, and which of those dependencies are degraded or at risk.
 
 Elements: [text](text.md), [button](button.md), [input](input.md), [badge](badge.md).
 
@@ -12,29 +12,38 @@ Native behavior: relationship-map. It needs pagesystem.js (see ../implementation
 
 ## content
 
-- Labeled synthetic records and task-specific controls.
+- The source service and a depth control for one or two hops
+- Each service as a button naming itself, its kind and its status, laid out by distance from the source
+- Hairline connectors from each service to the ones that depend on it
+- Status as a dot and a word: degraded and at risk in the danger color, healthy muted
+- A readout naming the selected service, its kind, status and what is happening
+- Counts of visible services and of those degraded or at risk, and a sample label
 
 ## states
 
-- one hop
 - two hops
-- selected dependency
+- one hop
+- service selected
+- selection dropped to the source when a shallower depth hides it
 
 ## responsive
 
-- Wrap controls and preserve reading order at narrow widths.
-- Keep essential labels and keyboard targets at enlarged text sizes.
+- Below 34rem of component width the tree becomes an outline: each list of dependencies indents under its parent with one rule beside it.
+- Service names, kinds and statuses wrap inside their card; cards keep a control height so they stay easy to hit.
 
 ## checks
 
-- Changing depth removes inaccessible selections.
-- A native select provides every node and status without relying on the SVG.
+- Every service is reachable as a button whose text gives its name, kind and status; nothing depends on the drawing alone.
+- The tree is one tab stop: arrows, Home and End move between services in reading order, and Enter or Space selects.
+- Selecting a service presses it, marks it with the selected ring and names it in the readout.
+- Changing depth recounts services and risks and drops a selection the new depth hides.
+- Status is never color alone: the word is always shown beside the dot.
 - Graph traversal handles cycles without duplicate nodes.
 
 ## HTML
 
 ```html
-<main><header class="ps-stack-tight"><p class="ps-kicker">Component / Data</p><h1 class="ps-heading">Relationship map</h1><p class="ps-note">Trace direct and indirect dependencies without losing the selected record.</p></header><section class="ps-instrument" data-ps-relationship-map aria-label="Sample dependency map"><header class="ps-instrument-header"><div><h2>Service dependencies</h2><p>From Public API · sample environment</p></div><label class="ps-compact-field">Depth<select class="ps-input" data-map-hops><option value="1">1 hop</option><option value="2" selected>2 hops</option></select></label></header><div class="ps-instrument-body"><svg class="ps-map-plot" data-map-plot viewBox="0 0 500 440" aria-hidden="true"></svg><label class="ps-compact-field">Inspect a dependency<select class="ps-input" data-map-select></select></label><div class="ps-data-readout" data-map-detail aria-live="polite"></div></div><footer class="ps-instrument-footer"><span>Visible services <strong data-map-count></strong></span><span>Degraded or at risk <strong data-map-risk></strong></span><span>Sample topology</span></footer></section></main>
+<main><header class="ps-stack-tight"><p class="ps-kicker">Component / Data</p><h1 class="ps-heading">Relationship map</h1><p class="ps-note">Trace direct and indirect dependencies without losing the selected record.</p></header><section class="ps-instrument" data-ps-relationship-map aria-label="Sample dependency map"><header class="ps-instrument-header"><div><h2>Service dependencies</h2><p>From Public API · sample environment</p></div><label class="ps-compact-field">Depth<select class="ps-input" data-map-hops><option value="1">1 hop</option><option value="2" selected>2 hops</option></select></label></header><div class="ps-instrument-body"><div class="ps-map-tree" data-map-plot role="group" aria-label="Services by distance from Public API"></div><div class="ps-data-readout" data-map-detail aria-live="polite"></div></div><footer class="ps-instrument-footer"><span>Visible services <strong data-map-count></strong></span><span>Degraded or at risk <strong data-map-risk></strong></span><span>Sample topology</span></footer></section></main>
 ```
 
 ## Variant: Impact path

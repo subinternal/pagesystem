@@ -40,7 +40,7 @@ One line per entry. Read only the entry files you need: each holds that entry's 
 - [conversion-funnel](entries/conversion-funnel.md): Trace a sample cohort through successive activation stages.
 - [activity-heatmap](entries/activity-heatmap.md): A daily activity grid with category filtering and date inspection.
 - [incident-timeline](entries/incident-timeline.md): Inspect chronological evidence, confirm containment, and close a sample incident.
-- [relationship-map](entries/relationship-map.md): Explore direct and indirect dependencies with a selectable visual topology.
+- [relationship-map](entries/relationship-map.md): A service's dependencies as a tree: direct ones beside the source, indirect ones beside their own parent, each with its kind and status in text.
 - [sequence-builder](entries/sequence-builder.md): Edit and reorder a timed sequence with derived day offsets and saved drafts.
 - [schedule-controls](entries/schedule-controls.md): Set weekdays, channel limits, and operating hours with explicit validation.
 - [spending-controls](entries/spending-controls.md): Configure a sample card with linked budget limits and merchant restrictions.

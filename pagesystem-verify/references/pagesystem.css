@@ -63,6 +63,8 @@
      Declared on :root: a host that overrides --ink on a subtree must re-declare these there. */
   --fill-hover: color-mix(in srgb, var(--ink) 5%, transparent);
   --fill-selected: color-mix(in srgb, var(--ink) 8%, transparent);
+  /* A selected item's ring: soft enough to sit with hairlines, strong enough for 3:1 against its ground. */
+  --ring-selected: color-mix(in srgb, var(--ink) 55%, transparent);
   --fill-pressed: color-mix(in srgb, var(--ink) 12%, transparent);
   --line-control: color-mix(in srgb, var(--ink) var(--line-control-strength), var(--surface));
   /* A divider inside a raised card: translucent ink, so it holds on raised grounds where --line nearly matches the surface in dark. */
@@ -728,7 +730,7 @@ input,progress { accent-color: var(--primary); }
 .ps-activity-grid button { display:grid; align-content:center; justify-items:center; min-width:0; min-height:var(--control-height); padding:var(--s-4) 0; border:0; border-radius:var(--r-6); background:var(--cell-bg); color:var(--cell-ink, var(--ink)); cursor:pointer; font:var(--weight-regular) var(--text-caption)/var(--leading-ui) var(--mono); font-variant-numeric:tabular-nums; transition:background-color var(--press) var(--ease-out), box-shadow var(--hover) var(--ease-out); }
 .ps-activity-grid button[data-level="0"] { box-shadow:inset 0 0 0 1px var(--line); }
 .ps-activity-grid button small { font:var(--weight-medium) var(--text-caption)/var(--leading-ui) var(--sans); }
-.ps-activity-grid button[aria-selected="true"] { position:relative; z-index:1; box-shadow:0 0 0 var(--s-2) var(--surface), 0 0 0 var(--s-4) var(--ink); }
+.ps-activity-grid button[aria-selected="true"] { position:relative; z-index:1; box-shadow:0 0 0 var(--s-2) var(--surface), 0 0 0 calc(var(--s-2) + 1.5px) var(--ring-selected); }
 .ps-activity-grid button[aria-selected="true"]:focus-visible { outline:0; }
 .ps-activity-plot .ps-plot-tip { z-index:2; transition:left var(--press) var(--ease-out), right var(--press) var(--ease-out), top var(--press) var(--ease-out); }
 @container activity (max-width: 30rem) { .ps-activity-plot .ps-plot-tip { display:none; } }
@@ -745,6 +747,14 @@ input,progress { accent-color: var(--primary); }
 :is([data-ps-signal-volume],[data-ps-match-distribution],[data-ps-conversion-funnel],[data-ps-activity-heatmap])[data-still] *,:is([data-ps-signal-volume],[data-ps-match-distribution],[data-ps-conversion-funnel],[data-ps-activity-heatmap])[data-still] *::before,:is([data-ps-signal-volume],[data-ps-match-distribution],[data-ps-conversion-funnel],[data-ps-activity-heatmap])[data-still] *::after { transition:none !important; }
 @media(prefers-reduced-motion:reduce) { :is([data-ps-signal-volume],[data-ps-match-distribution],[data-ps-conversion-funnel],[data-ps-activity-heatmap]) *,:is([data-ps-signal-volume],[data-ps-match-distribution],[data-ps-conversion-funnel],[data-ps-activity-heatmap]) *::before,:is([data-ps-signal-volume],[data-ps-match-distribution],[data-ps-conversion-funnel],[data-ps-activity-heatmap]) *::after { transition:none !important; } }
 @media(forced-colors:active) { .ps-volume-column[data-selected="true"],.ps-match-column[data-selected="true"],.ps-funnel-stage[aria-pressed="true"] { outline:1px solid Highlight; } .ps-funnel-fill,.ps-match-dots i { background:CanvasText; forced-color-adjust:none; } .ps-activity-grid button[aria-selected="true"] { outline:2px solid Highlight; } }
+/* On a phone a footer of plain text reads as one caption: its parts flow on, joined by a middle dot, instead of
+   wrapping into a column with the last part stranded on a line of its own. Footers with controls keep their row. */
+@media(max-width:480px) {
+  .ps-instrument-footer:not(:has(button, a, input, select)) { display:block; line-height:var(--leading-ui); text-wrap-style:pretty; }
+  /* A label and its figure never part; a line may break between items, and the dot stays with the item before it. */
+  .ps-instrument-footer:not(:has(button, a, input, select)) > span:has(> strong) { display:inline-block; }
+  .ps-instrument-footer:not(:has(button, a, input, select)) > span:not(:empty):has(~ span:not(:empty))::after { content:"\00b7"; margin-inline:var(--s-8); }
+}
 @media(max-width:480px) { .ps-instrument-footer { padding-block:var(--s-12); } .ps-inspect-control { grid-template-columns:1fr auto; } .ps-inspect-control input { grid-column:1 / -1; grid-row:2; } }
 
 .ps-workflow-actions { container:workflow-actions / inline-size; display:flex; flex-wrap:wrap; gap:var(--s-8); align-items:center; }
@@ -775,12 +785,6 @@ input,progress { accent-color: var(--primary); }
 .ps-workflow-dialog::backdrop { background:color-mix(in srgb,var(--shadow-color) 45%,transparent); }
 .ps-workflow-dialog h3 { font-size:var(--text-title); margin-bottom:var(--s-12); }
 .ps-workflow-dialog p { margin-bottom:var(--s-24); }
-.ps-map-plot { width:100%; max-height:420px; border:0; border-radius:var(--r-8); background:var(--well); }
-.ps-map-orbit { stroke:var(--line); stroke-dasharray:3 5; }.ps-map-edge { stroke:var(--strong-line); stroke-width:1.5; }
-.ps-map-node { cursor:pointer; }.ps-map-plot :is(g,line) { transform-box:fill-box; transform-origin:center; }
-.ps-map-node circle { transition:stroke-width var(--press) var(--ease-out), fill var(--press) var(--ease-out); }.ps-map-node circle { fill:var(--surface); stroke:var(--ui-accent); stroke-width:2; }
-.ps-map-node[data-risk="true"] circle { stroke:var(--source-saas); }.ps-map-node[data-selected="true"] circle { fill:var(--well); stroke-width:4; }
-.ps-map-node text { fill:var(--ink); font:var(--text-caption)/var(--leading-ui) var(--mono); }
 .ps-sequence-list { display:grid; gap:var(--s-8); }
 .ps-sequence-step { display:grid; grid-template-columns:auto minmax(0,1fr); gap:var(--s-4) var(--s-12); padding:var(--s-16); border:1px solid var(--line); border-radius:var(--r-12); background:var(--bg); color:var(--ink); cursor:pointer; text-align:left; font-size:var(--text-ui); }
 .ps-sequence-step[aria-pressed="true"] { border-color:var(--line-selected); background:var(--surface); box-shadow:none; }
@@ -838,6 +842,42 @@ input,progress { accent-color: var(--primary); }
 /* The last input was a key press, or motion is reduced: every change lands at once. Pseudo-elements cannot sit inside :is(), so they are listed. */
 :is([data-ps-incident-timeline],[data-ps-relationship-map],[data-ps-sequence-builder],[data-ps-schedule-controls])[data-still] *,:is([data-ps-incident-timeline],[data-ps-relationship-map],[data-ps-sequence-builder],[data-ps-schedule-controls])[data-still] *::before,:is([data-ps-incident-timeline],[data-ps-relationship-map],[data-ps-sequence-builder],[data-ps-schedule-controls])[data-still] *::after { transition:none !important; }
 @media (prefers-reduced-motion: reduce) { :is([data-ps-incident-timeline],[data-ps-relationship-map],[data-ps-sequence-builder],[data-ps-schedule-controls]) *,:is([data-ps-incident-timeline],[data-ps-relationship-map],[data-ps-sequence-builder],[data-ps-schedule-controls]) *::before,:is([data-ps-incident-timeline],[data-ps-relationship-map],[data-ps-sequence-builder],[data-ps-schedule-controls]) *::after { transition:none !important; animation:none !important; } }
+
+/* Relationship map: the dependency tree as nested lists, each service a button with its name, kind and status in text.
+   Wide, each list of dependencies sits to the right of its parent, joined by hairline connectors on the plot axis ink;
+   narrow, the same lists indent under their parent as an outline. Status is the only color: a dot and the word. */
+[data-ps-relationship-map] { container:relmap / inline-size; }
+/* A hairline of room so card edges and shadows are never clipped by the panel. */
+.ps-map-tree { --map-gap:var(--s-32); padding:var(--s-2); }
+.ps-map-tree ol { margin:0; padding:0; list-style:none; }
+.ps-map-tree li { position:relative; display:grid; grid-template-columns:minmax(10rem, 13rem) minmax(0, 1fr); align-items:center; column-gap:var(--map-gap); padding-block:var(--s-4); }
+.ps-map-tree li > ol { display:grid; }
+.ps-map-node { position:relative; display:grid; gap:var(--s-2); min-height:var(--control-height); padding:var(--s-8) var(--s-12); border:0; border-radius:var(--r-8); background:var(--surface); box-shadow:var(--edge); color:var(--ink); font:inherit; text-align:start; cursor:pointer; transition:box-shadow var(--hover) ease, background var(--hover) ease; }
+.ps-map-node:hover { box-shadow:var(--edge-hover); }
+/* Selection is a step up in the same quiet family: the selected fill and a soft ink ring, never a hard outline. */
+.ps-map-node[aria-pressed="true"] { background:var(--fill-selected); box-shadow:inset 0 0 0 1.5px var(--ring-selected); }
+.ps-map-name { font-size:var(--text-label); font-weight:var(--weight-medium); line-height:var(--leading-title); }
+.ps-map-meta { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s-2) var(--s-8); color:var(--muted); font-size:var(--text-caption); line-height:var(--leading-ui); }
+.ps-map-health { display:inline-flex; align-items:center; gap:var(--s-4); }
+.ps-map-health::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--plot-axis); }
+.ps-map-node[data-status="risk"] .ps-map-health { color:var(--danger); font-weight:var(--weight-medium); }
+.ps-map-node[data-status="risk"] .ps-map-health::before { background:var(--danger); }
+/* Connectors: a stub from the parent to the bus, a bus down the dependencies, a stub from the bus to each. */
+.ps-map-tree li:has(> ol) > .ps-map-node::after { content:""; position:absolute; top:50%; left:100%; width:calc(var(--map-gap) / 2); border-top:1px solid var(--plot-axis); }
+.ps-map-tree ol ol > li::before { content:""; position:absolute; top:50%; left:calc(var(--map-gap) / -2); width:calc(var(--map-gap) / 2); border-top:1px solid var(--plot-axis); }
+.ps-map-tree ol ol > li::after { content:""; position:absolute; inset-block:0; left:calc(var(--map-gap) / -2); border-left:1px solid var(--plot-axis); }
+.ps-map-tree ol ol > li:first-child::after { top:50%; }
+.ps-map-tree ol ol > li:last-child::after { bottom:50%; }
+.ps-map-tree ol ol > li:only-child::after { display:none; }
+@container relmap (max-width: 34rem) {
+  .ps-map-tree li { grid-template-columns:minmax(0, 1fr); }
+  .ps-map-tree li > ol { margin-inline-start:var(--s-12); padding-inline-start:var(--s-16); border-inline-start:1px solid var(--plot-axis); }
+  .ps-map-tree li:has(> ol) > .ps-map-node::after,.ps-map-tree ol ol > li::before,.ps-map-tree ol ol > li::after { display:none; }
+}
+@media (forced-colors: active) {
+  .ps-map-node { border:1px solid CanvasText; }
+  .ps-map-node[aria-pressed="true"] { outline:2px solid Highlight; }
+}
 
 /* Spending controls: the limit leads, with a neutral delta pill while it differs from the saved limit. Spend this
    month reads against the draft limit on a unit meter, one cell per day's even share, so today's pace falls on a cell
@@ -2859,11 +2899,11 @@ th.ps-crm-num .ps-crm-sort { flex-direction:row-reverse; justify-content:flex-st
 .ps-cohort-size { padding-inline:var(--s-4) var(--s-12); color:var(--muted); font:var(--weight-regular) var(--text-caption)/var(--leading-ui) var(--mono); white-space:nowrap; }
 .ps-cohort-grid td[data-level] { position:relative; min-width:var(--s-48); height:var(--cohort-cell); padding:0 var(--s-4); border-radius:var(--r-4); background:var(--cell-bg); color:var(--cell-ink, var(--ink)); font:var(--weight-regular) var(--text-caption)/1 var(--mono); text-align:center; white-space:nowrap; cursor:pointer; transition:box-shadow var(--press) var(--ease-out); }
 .ps-cohort-grid td[data-level]:focus-visible { outline-offset:var(--s-2); }
-.ps-cohort-grid td[aria-selected="true"] { z-index:1; box-shadow:0 0 0 var(--s-2) var(--surface), 0 0 0 var(--s-4) var(--ink); }
+.ps-cohort-grid td[aria-selected="true"] { z-index:1; box-shadow:0 0 0 var(--s-2) var(--surface), 0 0 0 calc(var(--s-2) + 1.5px) var(--ring-selected); }
 .ps-cohort-grid td[aria-selected="true"]:focus-visible { outline:0; }
 /* A period still in progress keeps its fill so far but reads as provisional. */
 .ps-cohort-grid td[data-partial] { background:color-mix(in srgb, var(--cell-bg) 55%, var(--surface)); color:var(--ink); box-shadow:inset 0 0 0 1px var(--plot-baseline); }
-.ps-cohort-grid td[data-partial][aria-selected="true"] { box-shadow:inset 0 0 0 1px var(--plot-baseline), 0 0 0 var(--s-2) var(--surface), 0 0 0 var(--s-4) var(--ink); }
+.ps-cohort-grid td[data-partial][aria-selected="true"] { box-shadow:inset 0 0 0 1px var(--plot-baseline), 0 0 0 var(--s-2) var(--surface), 0 0 0 calc(var(--s-2) + 1.5px) var(--ring-selected); }
 .ps-cohort-grid tfoot :is(th,td) { border-top:var(--s-8) solid transparent; background-clip:padding-box; }
 .ps-cohort-grid tfoot th { color:var(--ink); font-weight:var(--weight-medium); }
 /* The marked cohort: a short rule in the series hue beside its name. */
@@ -2980,7 +3020,7 @@ th.ps-crm-num .ps-crm-sort { flex-direction:row-reverse; justify-content:flex-st
 :is(.ps-scatter-dot,.ps-scatter-key i)[data-size="3"] { --dot:var(--dot-3); }
 .ps-scatter-dot:is([data-category],[data-outlier]),.ps-scatter-points[data-searching] .ps-scatter-dot[data-match] { background:var(--dot-color); box-shadow:0 0 0 1px var(--surface); }
 .ps-scatter-points[data-searching] .ps-scatter-dot:not([data-match]):not([data-focus]) { background:var(--plot-context); box-shadow:inset 0 0 0 1px var(--plot-axis); }
-.ps-scatter-dot[data-focus] { z-index:2; --dot:var(--s-12); background:var(--dot-color); box-shadow:0 0 0 var(--s-2) var(--surface), 0 0 0 calc(var(--s-2) + 1.5px) var(--ink); }
+.ps-scatter-dot[data-focus] { z-index:2; --dot:var(--s-12); background:var(--dot-color); box-shadow:0 0 0 var(--s-2) var(--surface), 0 0 0 calc(var(--s-2) + 1.5px) var(--ring-selected); }
 .ps-scatter-dot[data-focus][data-size="2"] { --dot:var(--dot-2); }
 .ps-scatter-dot[data-focus][data-size="3"] { --dot:var(--dot-3); }
 .ps-scatter-key { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s-8) var(--s-24); margin:0; padding:0; list-style:none; color:var(--muted); font-size:var(--text-caption); }

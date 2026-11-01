@@ -5290,18 +5290,18 @@ function caseTransition(state,action){
  throw new Error('Case transition is not allowed');
 }
 const DEPENDENCY_NODES = [
- ['api','Public API','Service',250,220,'Degraded','Requests are waiting on the billing queue.'],
- ['auth','Identity','Service',250,105,'Healthy','Token validation is operating normally.'],
- ['billing','Billing','Service',350,220,'Degraded','Queue latency is above the sample threshold.'],
- ['search','Search','Service',250,335,'Healthy','Search requests are within their target.'],
- ['events','Event bus','Queue',150,220,'At risk','The retry backlog could delay downstream jobs.'],
- ['keys','Key store','Database',250,35,'Healthy','Credentials are available.'],
- ['ledger','Ledger','Database',425,145,'At risk','Writes depend on billing recovery.'],
- ['mail','Mail worker','Worker',425,295,'Healthy','No affected deliveries in this sample.'],
- ['index','Search index','Database',250,405,'Healthy','The current index is available.'],
- ['webhooks','Webhooks','Worker',75,295,'At risk','Retries are waiting on the event bus.'],
- ['archive','Archive','Database',75,145,'Healthy','Historical events are readable.']
-].map(([id,name,type,x,y,status,detail])=>({id,name,type,x,y,status,detail}));
+ ['api','Public API','Service','Degraded','Requests are waiting on the billing queue.'],
+ ['auth','Identity','Service','Healthy','Token validation is operating normally.'],
+ ['billing','Billing','Service','Degraded','Queue latency is above the sample threshold.'],
+ ['search','Search','Service','Healthy','Search requests are within their target.'],
+ ['events','Event bus','Queue','At risk','The retry backlog could delay downstream jobs.'],
+ ['keys','Key store','Database','Healthy','Credentials are available.'],
+ ['ledger','Ledger','Database','At risk','Writes depend on billing recovery.'],
+ ['mail','Mail worker','Worker','Healthy','No affected deliveries in this sample.'],
+ ['index','Search index','Database','Healthy','The current index is available.'],
+ ['webhooks','Webhooks','Worker','At risk','Retries are waiting on the event bus.'],
+ ['archive','Archive','Database','Healthy','Historical events are readable.']
+].map(([id,name,type,status,detail])=>({id,name,type,status,detail}));
 const DEPENDENCY_EDGES=[['api','auth'],['api','billing'],['api','search'],['api','events'],['auth','keys'],['billing','ledger'],['billing','mail'],['search','index'],['events','webhooks'],['events','archive']];
 function reachableNodes(nodes,edges,start,hops){
  if(![1,2].includes(hops)||nodes.length>16||edges.length>24)throw new Error('Invalid graph bounds');
@@ -5331,7 +5331,6 @@ function enhanceWorkflowComponents(root){
  const find=s=>[...(root.matches?.(s)?[root]:[]),...root.querySelectorAll(s)],on=(el,type,fn)=>el.addEventListener(type,fn,{signal:controller.signal});
  const node=(tag,text,cls)=>{const e=doc.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
  const emit=(block,name,detail)=>block.dispatchEvent(new win.CustomEvent('pagesystem:'+name,{bubbles:true,detail}));
- const svg=(tag,attrs)=>{const e=doc.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,String(v));return e;};
 
  /* Motion is presentation only: every handler writes the final DOM first, then may ease into it.
     Timers, frames and observers come from this module's realm, because a docs preview frame is sandboxed
@@ -5433,21 +5432,28 @@ function enhanceWorkflowComponents(root){
  }
  for(const b of find('[data-ps-relationship-map]')){
   trackInput(b);
-  const hops=b.querySelector('[data-map-hops]'),select=b.querySelector('[data-map-select]'),plot=b.querySelector('[data-map-plot]');let selected='api',visible=[],nodeEls=new Map(),edgeEls=new Map();
-  const show=()=>{const current=visible.find(n=>n.id===selected);say(b,b.querySelector('[data-map-detail]'),`${current.name} · ${current.type} · ${current.status}. ${current.detail}`);select.value=selected;for(const el of plot.querySelectorAll('[data-node]'))el.dataset.selected=String(el.dataset.node===selected);emit(b,'dependency',{id:selected,hops:Number(hops.value)});};
-  // Changing depth re-flows the map: new edges draw outward from their source, new nodes grow in, removed ones shrink away.
-  const render=()=>{visible=reachableNodes(DEPENDENCY_NODES,DEPENDENCY_EDGES,'api',Number(hops.value));if(!visible.some(n=>n.id===selected))selected='api';select.replaceChildren();plot.replaceChildren();
-   const oldNodes=nodeEls,oldEdges=edgeEls;nodeEls=new Map();edgeEls=new Map();
-   for(const r of [115,185])plot.append(svg('circle',{cx:250,cy:220,r,fill:'none',class:'ps-map-orbit'}));
-   const ids=new Set(visible.map(n=>n.id)),byId=new Map(visible.map(n=>[n.id,n]));for(const [a,c]of DEPENDENCY_EDGES){if(!ids.has(a)||!ids.has(c))continue;const x=byId.get(a),y=byId.get(c),line=svg('line',{x1:x.x,y1:x.y,x2:y.x,y2:y.y,pathLength:1,class:'ps-map-edge'});edgeEls.set(a+'>'+c,line);plot.append(line);}
-   for(const n of visible){const option=node('option',`${n.name} · ${n.status}`);option.value=n.id;select.append(option);const g=svg('g',{'data-node':n.id,'data-risk':n.status!=='Healthy',class:'ps-map-node'});g.append(svg('circle',{cx:n.x,cy:n.y,r:n.id==='api'?27:18}));const label=svg('text',{x:n.x,y:n.y+4,'text-anchor':'middle'});label.textContent=n.name.split(' ').map(x=>x[0]).join('').slice(0,2);g.append(label);nodeEls.set(n.id,g);plot.append(g);}
-   if(moving(b)){const anchor=plot.children[1],leaving=[];
-    for(const [key,line]of oldEdges)if(!edgeEls.has(key))leaving.push(line);for(const [id,g]of oldNodes)if(!nodeEls.has(id)){g.removeAttribute('data-node');leaving.push(g);}
-    anchor.after(...leaving);for(const el of leaving)ghost(el,el.localName==='line'?[{strokeDasharray:'1 0'},{strokeDasharray:'0 1'}]:[{opacity:1,transform:'none'},{opacity:0,transform:'scale(.6)'}],PRESS);
-    for(const [key,line]of edgeEls)if(!oldEdges.has(key))play(b,line,[{strokeDasharray:'0 1'},{strokeDasharray:'1 0'}],PRESS);
-    for(const [id,g]of nodeEls)if(!oldNodes.has(id))play(b,g,[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'none'}],PRESS,{delay:SETTLE-PRESS,fill:'backwards'});}
+  // The dependencies form a tree, drawn as nested lists: the source, its direct dependencies, and each indirect one
+  // beside its own parent. Every service is a button naming itself, its kind and its status, so the drawing is the
+  // accessible list; arrows move between services in reading order with one tab stop, Enter or Space selects.
+  const hops=b.querySelector('[data-map-hops]'),plot=b.querySelector('[data-map-plot]');let selected='api',visible=[],buttons=[];
+  const show=(focus=false)=>{const current=visible.find(n=>n.id===selected);say(b,b.querySelector('[data-map-detail]'),`${current.name} · ${current.type} · ${current.status}. ${current.detail}`);
+   for(const btn of buttons){const on=btn.dataset.node===selected;btn.setAttribute('aria-pressed',String(on));btn.tabIndex=on?0:-1;if(on&&focus)btn.focus();}
+   emit(b,'dependency',{id:selected,hops:Number(hops.value)});};
+  const render=()=>{visible=reachableNodes(DEPENDENCY_NODES,DEPENDENCY_EDGES,'api',Number(hops.value));if(!visible.some(n=>n.id===selected))selected='api';
+   const byId=new Map(visible.map(n=>[n.id,n])),kids=new Map(visible.map(n=>[n.id,[]]));
+   for(const n of visible){if(!n.depth)continue;const parent=DEPENDENCY_EDGES.map(([a,c])=>a===n.id?c:c===n.id?a:null).find(id=>byId.get(id)?.depth===n.depth-1);kids.get(parent).push(n);}
+   const before=new Set(buttons.map(x=>x.dataset.node));buttons=[];
+   const item=n=>{const li=node('li'),btn=node('button',undefined,'ps-map-node'),meta=node('span',undefined,'ps-map-meta');btn.type='button';btn.dataset.node=n.id;btn.dataset.status=n.status==='Healthy'?'healthy':'risk';
+    meta.append(node('span',n.type),node('span',n.status,'ps-map-health'));btn.append(node('span',n.name,'ps-map-name'),meta);buttons.push(btn);li.append(btn);
+    if(kids.get(n.id).length){const ol=node('ol');for(const c of kids.get(n.id))ol.append(item(c));li.append(ol);}return li;};
+   const tree=node('ol');tree.append(item(byId.get('api')));plot.replaceChildren(tree);
+   if(moving(b))for(const btn of buttons)if(!before.has(btn.dataset.node))play(b,btn.parentElement,[{opacity:0},{opacity:1}],PRESS,{delay:SETTLE-PRESS,fill:'backwards'});
    roll(b,b.querySelector('[data-map-count]'),String(visible.length));roll(b,b.querySelector('[data-map-risk]'),String(visible.filter(n=>n.status!=='Healthy').length));show();};
-  on(select,'change',()=>{selected=select.value;show();});on(hops,'change',render);on(plot,'click',e=>{const n=e.target.closest('[data-node]');if(n){selected=n.dataset.node;show();}});render();ready.add(b);
+  on(hops,'change',render);
+  on(plot,'click',e=>{const btn=e.target.closest('[data-node]');if(btn){selected=btn.dataset.node;show();}});
+  on(plot,'keydown',e=>{const at=buttons.indexOf(doc.activeElement);if(at<0)return;const to={ArrowDown:at+1,ArrowUp:at-1,Home:0,End:buttons.length-1}[e.key];if(to===undefined)return;e.preventDefault();
+   const next=buttons[Math.max(0,Math.min(buttons.length-1,to))];for(const btn of buttons)btn.tabIndex=btn===next?0:-1;next.focus();});
+  render();ready.add(b);
  }
  for(const b of find('[data-ps-sequence-builder]')){
   trackInput(b);
