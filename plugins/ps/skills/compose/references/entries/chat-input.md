@@ -92,7 +92,7 @@ The agent is answering the last prompt: send has become stop, and the next promp
 ```html
 <main><header class="ps-stack-tight"><p class="ps-kicker">Component / Agents</p><h1 class="ps-heading">Chat input while responding</h1><p class="ps-note">While the agent answers, the send button becomes stop and the next prompt can be drafted without sending it.</p></header>
 <section class="ps-chat-input" data-ps-chat-input data-chat-state="responding" aria-label="Sample chat input">
-<ol class="ps-thread" data-chat-log aria-label="Sent prompts"><li class="ps-message" data-from="user"><div class="ps-message-bubble">Summarize last week’s failed payments by card network and flag anything above 2%.</div><div class="ps-message-meta"><time datetime="2026-10-29T09:41">9:41 AM</time><span data-message-note>To Opus 5.5</span></div></li></ol>
+<ol class="ps-thread" data-chat-log aria-label="Sent prompts"><li class="ps-message" data-from="user"><span class="ps-message-who">You</span><div class="ps-message-bubble">Summarize last week’s failed payments by card network and flag anything above 2%.</div><div class="ps-message-meta"><time datetime="2026-10-29T09:41">9:41 AM</time><span data-message-note>To Opus 5.5</span></div></li></ol>
 <form class="ps-chat-input-form">
 <ul class="ps-attachments" data-layout="inline" data-chat-files aria-label="Attached files" hidden></ul>
 <label class="ps-visually-hidden" for="busy-prompt">Prompt</label>

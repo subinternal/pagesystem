@@ -12,7 +12,7 @@
     {
       "name": "ps",
       "description": "Compose, verify, recover and finish web pages with Pagesystem page contracts, tokens and components: /ps:compose, /ps:verify, /ps:recover, /ps:finish.",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "author": {
         "name": "Subinternal",
         "email": "gh@subinternal.com"

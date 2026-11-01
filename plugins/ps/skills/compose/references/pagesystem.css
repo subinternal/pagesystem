@@ -1144,21 +1144,17 @@ input,progress { accent-color: var(--primary); }
 .ps-attachments[data-layout="inline"] .ps-attachment-text { display:flex; flex-wrap:wrap; align-items:baseline; column-gap:var(--s-8); }
 .ps-attachments[data-layout="inline"] .ps-attachment-type { display:none; }
 .ps-attachments[data-layout="inline"] .ps-icon-action { width:var(--s-32); height:var(--s-32); border-radius:var(--r-6); }
-.ps-message[data-from="user"] .ps-attachments[data-layout="inline"] { justify-content:flex-end; }
-
-/* Messages: the person's turns are bubbles at the end edge; the assistant answers as readable prose beside its mark. */
-.ps-thread { display:grid; gap:var(--s-8); margin:0; padding:0; list-style:none; }
+/* Messages: every turn starts at the same edge. A person's turn is named in a quiet label above their words, in full
+   ink and without a bubble; the assistant's answer is prose at the reading measure. Turns of one speaker sit close;
+   a change of speaker opens a larger gap. */
+.ps-thread { display:grid; gap:0; margin:0; padding:0; list-style:none; }
+/* A question and its answer read as a pair: the reserved row for time and actions separates them, and each new
+   question from the person opens a larger gap. */
+.ps-thread:not(:has([data-group-start])) > .ps-message[data-from="user"]:not(:first-child) { margin-top:var(--s-24); }
 .ps-message { display:grid; grid-template-columns:minmax(0,1fr); justify-items:start; row-gap:var(--s-4); min-width:0; }
-.ps-message[data-from="user"] { justify-items:end; }
-.ps-message[data-from="assistant"],.ps-message[data-from="other"] { grid-template-columns:var(--s-32) minmax(0,1fr); column-gap:var(--s-12); justify-items:stretch; }
-.ps-message[data-from="assistant"] > :not(.ps-message-avatar),.ps-message[data-from="other"] > :not(.ps-message-avatar) { grid-column:2; }
-.ps-message-avatar { grid-column:1; grid-row:1 / span 2; align-self:start; display:grid; place-items:center; width:var(--s-32); height:var(--s-32); border-radius:var(--r-pill); background:var(--well); color:var(--muted); font-size:var(--text-caption); font-weight:var(--weight-medium); line-height:var(--leading-ui); }
-.ps-message-avatar .ps-i { font-size:var(--text-body); }
-.ps-message:has(> .ps-message-author) > .ps-message-avatar { grid-row:1 / span 3; }
-.ps-message-author { color:var(--muted); font-size:var(--text-caption); line-height:var(--leading-ui); padding-inline:var(--s-12); }
-.ps-message-bubble { width:fit-content; max-width:min(80%, 34rem); padding:var(--s-8) var(--s-12); background:var(--well); border-radius:var(--r-16); border-end-end-radius:var(--r-6); font-size:var(--text-ui); line-height:var(--leading-ui); white-space:pre-wrap; overflow-wrap:anywhere; text-wrap-style:pretty; }
-.ps-message[data-from="other"] .ps-message-bubble { max-width:min(100%, 34rem); border-end-end-radius:var(--r-16); border-end-start-radius:var(--r-6); }
-.ps-message-body { display:grid; gap:var(--s-12); max-width:var(--prose-measure); padding-top:var(--s-4); font-size:var(--text-ui); line-height:var(--leading-body); transition:opacity var(--press) var(--ease-out); }
+.ps-message-who,.ps-message-author { color:var(--muted); font:var(--weight-medium) var(--text-caption)/var(--leading-ui) var(--sans); }
+.ps-message-bubble { max-width:var(--prose-measure); color:var(--ink); font-size:var(--text-ui); line-height:var(--leading-body); white-space:pre-wrap; overflow-wrap:anywhere; text-wrap-style:pretty; }
+.ps-message-body { display:grid; gap:var(--s-12); max-width:var(--prose-measure); font-size:var(--text-ui); line-height:var(--leading-body); transition:opacity var(--press) var(--ease-out); }
 .ps-message-body :is(p,li) { text-wrap-style:pretty; }
 .ps-message-body ul { list-style:disc; }
 .ps-message-body ol { list-style:decimal; }
@@ -1170,7 +1166,7 @@ input,progress { accent-color: var(--primary); }
 
 /* Time and actions keep their space so revealing them never moves the thread; the latest turn always shows them. */
 .ps-message-meta { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s-2); min-height:var(--control-height); color:var(--muted); font-size:var(--text-caption); line-height:var(--leading-ui); font-variant-numeric:tabular-nums; opacity:0; transition:opacity var(--press) var(--ease-out); }
-.ps-message[data-from="assistant"] .ps-message-meta { margin-inline-start:calc(-1 * var(--s-8)); }
+.ps-message-meta { margin-inline-start:calc(-1 * var(--s-8)); }
 .ps-message-meta time,.ps-message-meta [data-message-note] { padding-inline:var(--s-8); }
 .ps-message:hover .ps-message-meta,.ps-message:focus-within .ps-message-meta,.ps-message[data-revealed] .ps-message-meta,.ps-message:last-child .ps-message-meta { opacity:1; }
 @media (hover:none) { .ps-message-meta { opacity:1; } }
@@ -1182,13 +1178,12 @@ input,progress { accent-color: var(--primary); }
 .ps-message-reveal { display:grid; grid-template-rows:0fr; transition:grid-template-rows var(--press) var(--ease-out); }
 .ps-message-reveal > .ps-message-meta { min-height:0; overflow:hidden; opacity:1; }
 .ps-message[data-revealed] .ps-message-reveal,.ps-message:focus-within .ps-message-reveal { grid-template-rows:1fr; }
-.ps-message[data-from="other"] .ps-message-meta { margin-inline-start:calc(-1 * var(--s-8)); }
 .ps-message:has(.ps-message-reveal) { row-gap:0; }
 .ps-message:has(.ps-message-reveal) .ps-message-author { padding-bottom:var(--s-4); }
-.ps-message[data-group-start]:not(:first-child) { margin-top:var(--s-12); }
+.ps-message[data-group-start]:not(:first-child) { margin-top:var(--s-16); }
 
-/* Editing a sent turn swaps its bubble for a field with the same reach. */
-.ps-message-edit { display:grid; gap:var(--gap-related); width:min(100%, 34rem); }
+/* Editing a sent turn swaps its words for a field at the same measure. */
+.ps-message-edit { display:grid; gap:var(--gap-related); width:min(100%, var(--prose-measure)); }
 .ps-message-edit textarea { resize:vertical; min-height:5em; line-height:var(--leading-ui); }
 .ps-message-edit > div { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:var(--gap-related); }
 
@@ -1203,7 +1198,6 @@ input,progress { accent-color: var(--primary); }
 }
 @media (forced-colors: active) {
   .ps-chat-input-form,.ps-attachment,.ps-chat-input-menu { border:1px solid CanvasText; }
-  .ps-message-bubble { border:1px solid CanvasText; }
 }
 
 /* Kit B: chat history, streaming text and inline citations. All spacing and type come from tokens. */
@@ -1310,7 +1304,10 @@ input,progress { accent-color: var(--primary); }
 .ps-chats-transcript:focus-visible { outline-offset:calc(-1 * var(--s-2)); }
 .ps-chats-thread[data-questions] .ps-chats-transcript { opacity:.16; }
 .ps-chats-turn { display:grid; gap:var(--s-16); }
-.ps-chats-ask { justify-self:end; max-width:min(85%, 30rem); text-wrap-style:pretty; padding:var(--s-8) var(--s-16); border-radius:var(--r-16); background:var(--well); font-size:var(--text-label); line-height:var(--leading-ui); scroll-margin-block:var(--s-16); }
+/* A person's question: a quiet You label over their words in full ink, at the answer's edge, as in a message thread. */
+.ps-chats-ask,.ps-cites-question,.ps-stream-ask { justify-self:start; max-width:var(--prose-measure); margin:0; color:var(--ink); font-size:var(--text-ui); font-weight:var(--weight-regular); line-height:var(--leading-body); text-wrap-style:pretty; }
+.ps-chats-ask { scroll-margin-block:var(--s-16); }
+.ps-chats-who,.ps-cites-who,.ps-stream-who { display:block; color:var(--muted); font:var(--weight-medium) var(--text-caption)/var(--leading-ui) var(--sans); }
 .ps-chats-ask:focus-visible { outline-offset:var(--s-2); }
 .ps-chats-answer :is(p,li) { text-wrap-style:pretty; }
 .ps-chats-answer { display:grid; gap:var(--s-12); max-width:var(--prose-measure); font-size:var(--text-ui); line-height:var(--leading-body); }
@@ -1383,7 +1380,6 @@ input,progress { accent-color: var(--primary); }
 .ps-stream[data-stream-state="stopped"] .ps-stream-state { color:var(--warm); }
 .ps-stream-turn { display:grid; gap:var(--s-16); padding:var(--panel-inset); }
 .ps-stream-turn .ps-stream-reply { padding:0; }
-.ps-stream-ask { justify-self:end; max-width:min(85%, 30rem); text-wrap-style:pretty; padding:var(--s-8) var(--s-16); border-radius:var(--r-16); background:var(--well); font-size:var(--text-label); }
 .ps-stream-summary { max-width:22rem; }
 .ps-stream-summary .ps-stream-bar { padding-inline-start:var(--s-16); }
 .ps-stream-summary .ps-stream-reply { padding:var(--s-16); }
@@ -1391,7 +1387,6 @@ input,progress { accent-color: var(--primary); }
 
 /* Inline citations. Markers sit in the line; the card is the only elevated surface. */
 .ps-cites { position:relative; display:grid; gap:var(--gap-group); width:100%; max-width:var(--w-form); min-width:0; padding:var(--panel-inset); background:var(--surface); border:1px solid transparent; border-radius:var(--r-16); box-shadow:var(--edge); }
-.ps-cites-question { justify-self:end; max-width:min(85%, 30rem); text-wrap-style:balance; padding:var(--s-8) var(--s-16); border-radius:var(--r-16); background:var(--well); font-size:var(--text-label); font-weight:var(--weight-regular); line-height:var(--leading-ui); }
 .ps-cites-body p,.ps-cites-sources p,.ps-cite-card p { text-wrap-style:pretty; }
 .ps-cites-body { display:grid; gap:var(--s-12); font-size:var(--text-ui); line-height:var(--leading-body); }
 .ps-cite { position:relative; display:inline-flex; align-items:center; gap:var(--s-4); min-width:1.5em; height:1.4em; margin-inline-start:var(--s-4); padding:0 var(--s-4); border:0; border-radius:var(--r-pill); background:var(--fill-selected); color:var(--muted); vertical-align:.1em; justify-content:center; font:var(--weight-medium) var(--text-caption)/var(--leading-ui) var(--sans); font-variant-numeric:tabular-nums; cursor:pointer; transition:background var(--hover) ease, color var(--hover) ease; }
@@ -1460,7 +1455,6 @@ input,progress { accent-color: var(--primary); }
 /* Plan card */
 .ps-plan { container:plan / inline-size; display:grid; gap:var(--s-16); width:100%; max-width:38rem; padding:var(--panel-inset); border-radius:var(--r-16); background:var(--surface); box-shadow:var(--edge); }
 .ps-plan-head { display:flex; align-items:flex-start; gap:var(--s-12); }
-.ps-plan-mark { flex:none; display:grid; place-items:center; width:var(--s-32); height:var(--s-32); border-radius:var(--r-8); background:var(--well); color:var(--muted); font-size:var(--t-16); }
 .ps-plan-titles { flex:1; min-width:0; display:grid; gap:var(--gap-caption); }
 .ps-plan-titles h2 { font-size:var(--text-title); line-height:var(--leading-title); letter-spacing:var(--tracking-title); }
 .ps-plan-titles p { color:var(--muted); font-size:var(--text-caption); }
@@ -1570,7 +1564,6 @@ input,progress { accent-color: var(--primary); }
 .ps-task-meta { color:var(--muted); font-size:var(--text-caption); font-variant-numeric:tabular-nums; }
 .ps-task[data-status="active"] > .ps-task-row .ps-task-name { font-weight:var(--weight-medium); }
 .ps-task[data-status="blocked"] > .ps-task-row .ps-task-meta { color:var(--danger); }
-.ps-task-row > .ps-button { flex:none; }
 .ps-task-expand { flex:none; display:inline-grid; place-items:center; min-width:var(--control-height); min-height:var(--control-height); margin-inline-start:calc(-1 * var(--s-8)); padding:0 var(--s-8); border:0; border-radius:var(--r-6); background:transparent; color:var(--muted); font-size:var(--text-label); cursor:pointer; transition:background-color var(--hover) ease, color var(--hover) ease; }
 .ps-task-expand:hover { background:var(--fill-hover); color:var(--ink); }
 .ps-task-expand .ps-i-chevron { transition:transform var(--press) var(--ease-out); }
@@ -1585,7 +1578,8 @@ input,progress { accent-color: var(--primary); }
 .ps-task-activity-line { min-width:0; overflow-wrap:anywhere; }
 .ps-task-activity-who { font-weight:var(--weight-medium); }
 .ps-task-activity-when { color:var(--muted); font-size:var(--text-caption); font-variant-numeric:tabular-nums; }
-.ps-task-reason { padding:0 var(--s-8) var(--s-8) calc(var(--s-8) + var(--s-16) + var(--s-12)); color:var(--muted); font-size:var(--text-label); }
+/* A blocked task reads its reason first, then the action that clears it. */
+.ps-task-reason { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s-8) var(--s-12); padding:0 var(--s-8) var(--s-8) calc(var(--s-8) + var(--s-16) + var(--s-12)); color:var(--muted); font-size:var(--text-label); }
 .ps-tasks-foot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--s-8); padding:var(--s-4) var(--s-8) var(--s-4) var(--s-16); border-top:1px solid var(--line); color:var(--muted); font-size:var(--text-caption); }
 .ps-tasks-foot > span,.ps-task-reason,.ps-task-activity-line { text-wrap-style:pretty; }
 .ps-task-name { text-wrap-style:balance; }
@@ -1599,9 +1593,6 @@ input,progress { accent-color: var(--primary); }
   .ps-tasks-toggle { padding-inline:var(--s-12); }
   .ps-tasks-body { padding-inline:var(--s-4); }
   .ps-tasks-foot { padding-inline-start:var(--s-12); }
-  .ps-task-row:has(> .ps-button) { flex-wrap:wrap; row-gap:0; }
-  .ps-task-row:has(> .ps-button) > label { flex-basis:calc(100% - var(--s-16) - var(--control-height) - var(--s-24)); }
-  .ps-task-row > .ps-button { order:1; margin:0 0 var(--s-8) calc(var(--s-16) + var(--s-12)); }
 }
 
 /* Code block: restrained syntax roles derived from house tokens; keywords and strings only carry hue. */
@@ -1871,12 +1862,9 @@ th.ps-crm-num .ps-crm-sort { flex-direction:row-reverse; justify-content:flex-st
 
 /* Trace waterfall */
 .ps-trace { max-width:880px; container:trace / inline-size; --trace-label:44%; }
-.ps-trace [data-series="identity"] { --series:var(--source-identity); }
-.ps-trace [data-series="endpoint"] { --series:var(--source-endpoint); }
-.ps-trace [data-series="cloud"] { --series:var(--source-cloud); }
-.ps-trace [data-series="email"] { --series:var(--source-email); }
-.ps-trace [data-series="network"] { --series:var(--source-network); }
-.ps-trace [data-series="saas"] { --series:var(--source-saas); }
+/* Every step is drawn on the ink levels: model calls in full ink, tool calls and agent spans as lighter steps of it.
+   Which agent ran a step is told by the tree, so the only hue is the danger of a failure. */
+.ps-trace { --series:var(--ink); }
 .ps-trace-search { flex:0 1 16rem; }
 .ps-trace-metrics { gap:var(--s-16) var(--s-32); padding:var(--s-16) var(--panel-inset); border-top:1px solid var(--line); }
 .ps-instrument-header + .ps-trace-metrics { border-top:0; }
@@ -1931,7 +1919,7 @@ th.ps-crm-num .ps-crm-sort { flex-direction:row-reverse; justify-content:flex-st
 .ps-trace-rows li[aria-selected="true"] .ps-trace-bar { outline:1.5px solid var(--line-selected); outline-offset:1px; }
 .ps-trace-seg { position:absolute; inset-block:3px; border-radius:2px; background:var(--mark, var(--series)); }
 .ps-trace-seg[data-kind="tool"] { background:var(--mark-tool, color-mix(in srgb, var(--series) 42%, var(--surface))); }
-/* Focus and context: while a card is open, the chosen span and its own steps keep their series color and every other
+/* Focus and context: while a card is open, the chosen span and its own steps keep their ink and every other
    mark steps back; the segments a parent draws for the focused steps keep theirs. A replay shows the whole run in color. */
 .ps-trace[data-focusing]:not([data-playing]) li[data-trace-span]:not([data-focus]) { --mark:var(--plot-context); --mark-tool:color-mix(in srgb, var(--plot-context) 55%, var(--surface)); --mark-agent:color-mix(in srgb, var(--plot-context) 30%, var(--surface)); }
 .ps-trace-seg[data-focus] { --mark:initial; --mark-tool:initial; }
@@ -1948,6 +1936,11 @@ th.ps-crm-num .ps-crm-sort { flex-direction:row-reverse; justify-content:flex-st
 .ps-trace-empty { padding:var(--s-32) var(--panel-inset); color:var(--muted); font-size:var(--text-label); text-align:center; }
 /* Detail card: opens under the chosen row, aligned with its label, on the panel surface. */
 .ps-trace-detail-slot { grid-row:2; grid-column:1 / -1; min-width:0; cursor:auto; }
+/* An open card sits above the replay's playhead, on the selected row's tint made opaque, so the line never crosses it;
+   a step's card waits until the step has run, so a replay never reports a result ahead of its time. */
+.ps-trace-rows li[aria-selected="true"]:has(> .ps-trace-detail-slot:not([hidden])) { z-index:3; }
+.ps-trace-rows li[aria-selected="true"] > .ps-trace-detail-slot { background:color-mix(in srgb, var(--ink) 8%, var(--surface)); }
+.ps-trace-rows li[data-run] > .ps-trace-detail-slot { display:none; }
 .ps-trace-detail { position:relative; z-index:1; overflow:hidden; }
 .ps-trace-body > .ps-trace-detail { border-top:1px solid var(--line); }
 .ps-trace-card { display:grid; gap:var(--s-16); margin-block:var(--s-4) var(--s-12); margin-inline:calc(var(--s-12) + var(--indent)) var(--s-12); padding:var(--s-16); border-radius:var(--r-12); background:var(--raised); box-shadow:var(--edge); }
@@ -1986,16 +1979,18 @@ th.ps-crm-num .ps-crm-sort { flex-direction:row-reverse; justify-content:flex-st
 .ps-trace-meter-track i[data-kind="idle"] { background:color-mix(in srgb, var(--ink) 18%, transparent); }
 .ps-trace-legend { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s-4) var(--s-16); margin:0; padding:0; list-style:none; }
 .ps-trace-legend li { display:flex; align-items:center; gap:var(--s-8); }
-/* The key draws each kind exactly as its bars do, in the run's first series, so the swatch is the mark. */
-.ps-trace-legend { --series:var(--source-identity); }
+/* The key draws each kind exactly as its bars do, so the swatch is the mark. */
 .ps-trace-swatch { width:12px; height:8px; border-radius:2px; background:var(--series); }
 .ps-trace-swatch[data-kind="tool"] { background:color-mix(in srgb, var(--series) 42%, var(--surface)); }
 .ps-trace-swatch[data-kind="agent"] { background:color-mix(in srgb, var(--series) 14%, var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--series) 45%, transparent); }
 .ps-trace-swatch[data-status="error"] { background:var(--danger-solid); }
 
-/* Replay: spans not yet reached are out of view; running spans keep their series color until they finish. */
+/* Replay: running spans keep their ink until they finish; a failure turns red only once its span completes. */
 /* Spans not yet reached keep their place, so the run fills in without the rows below jumping. */
-.ps-trace-rows li[data-run="pending"] { visibility:hidden; }
+/* During a replay every step is listed from the start; a step not yet reached shows its name, muted, and draws its
+   bar when the playhead arrives, so the panel holds its rows instead of reserving blank space. */
+.ps-trace-rows li[data-run="pending"] :is(.ps-trace-name,.ps-trace-name strong) { color:var(--muted); }
+.ps-trace-rows li[data-run="pending"] :is(.ps-trace-bar,.ps-trace-time) { visibility:hidden; }
 .ps-trace-rows li[data-run] .ps-trace-cost,.ps-trace[data-playing] .ps-trace-slowest,.ps-trace-rows li[data-run] .ps-i-trace-x { display:none; }
 .ps-trace-rows li[data-run][data-status="error"]:not([data-kind="agent"]) .ps-trace-bar { background:var(--series); }
 .ps-trace-rows li[data-run][data-kind="agent"][data-status="error"] .ps-trace-bar { box-shadow:none; }
@@ -2071,245 +2066,125 @@ th.ps-crm-num .ps-crm-sort { flex-direction:row-reverse; justify-content:flex-st
 /* Narrow panels stack label over track, so the selected tint covers both rows above the open detail. */
 @container trace (max-width: 36rem) { .ps-trace-rows li[aria-selected="true"]:has(.ps-trace-detail-slot:not([hidden]))::before { grid-row:1 / 3; } }
 
-/* Agent map: places or routes an agent found, drawn on an authored map. ps-am-* classes belong to this component. */
-.ps-i-walk { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 3.75a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5ZM8.75 5.25 7.25 9.75l2.25 1.75.75 3M7.25 9.75 5.75 14.5M8.75 5.25l2 2.25 1.75.5M8.75 5.25 6.5 6.25 5.5 8.25'/%3E%3C/svg%3E"); }
-.ps-i-tram { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.75 4h6.5a1.25 1.25 0 0 1 1.25 1.25v5.5A1.25 1.25 0 0 1 11.25 12h-6.5a1.25 1.25 0 0 1-1.25-1.25v-5.5A1.25 1.25 0 0 1 4.75 4ZM3.5 8.25h9M6 12l-1.5 2.5M10 12l1.5 2.5M6 1.75h4M8 1.75V4M6 10.25h.01M10 10.25h.01'/%3E%3C/svg%3E"); }
-.ps-i-car { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 1.2-3.3A1.25 1.25 0 0 1 5.4 4.9h5.2a1.25 1.25 0 0 1 1.2.8L13 9M3.25 9h9.5a.75.75 0 0 1 .75.75v2.5H2.5v-2.5A.75.75 0 0 1 3.25 9ZM4 12.25v1.5M12 12.25v1.5M5 10.6h.01M11 10.6h.01'/%3E%3C/svg%3E"); }
-.ps-i-expand { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 9.25 6.75M6.5 13.5h-4v-4M2.5 13.5l4.25-4.25'/%3E%3C/svg%3E"); }
-.ps-i-collapse { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13.5 2.5 9.5 6.5M9.5 3v3.5H13M2.5 13.5l4-4M3 9.5h3.5V13'/%3E%3C/svg%3E"); }
-.ps-i-star { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000' stroke='%23000' stroke-width='1' stroke-linejoin='round'%3E%3Cpath d='m8 1.9 1.85 3.85 4.2.55-3.07 2.92.78 4.17L8 11.37l-3.76 2.02.78-4.17L1.95 6.3l4.2-.55Z'/%3E%3C/svg%3E"); }
-.ps-i-columns { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 6 8 2.75 13.5 6ZM4 6v6.5M6.67 6v6.5M9.33 6v6.5M12 6v6.5M2 13.5h12'/%3E%3C/svg%3E"); }
-.ps-i-view { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.5 13 6 6.75l2.5 3.5L10 8.5l4.5 4.5ZM11.25 5.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z'/%3E%3C/svg%3E"); }
-.ps-i-church { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 1.5v3M6.75 2.75h2.5M4 14V8l4-3.5L12 8v6M2.5 14h11M6.75 14v-2.75a1.25 1.25 0 0 1 2.5 0V14'/%3E%3C/svg%3E"); }
-.ps-i-tower { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14V5.5L8 1.75l2 3.75V14M4.5 14h7M6 8.25h4M7.25 10.75h1.5'/%3E%3C/svg%3E"); }
-.ps-i-book { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 3.5h4A1.5 1.5 0 0 1 8 5v8.5A1.5 1.5 0 0 0 6.5 12h-4ZM13.5 3.5h-4A1.5 1.5 0 0 0 8 5v8.5A1.5 1.5 0 0 1 9.5 12h4Z'/%3E%3C/svg%3E"); }
-.ps-i-waves { --ps-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.5 6.25c1.3 0 1.95-1.25 3.25-1.25S6.7 6.25 8 6.25 9.95 5 11.25 5s1.95 1.25 3.25 1.25M1.5 10.75c1.3 0 1.95-1.25 3.25-1.25S6.7 10.75 8 10.75 9.95 9.5 11.25 9.5s1.95 1.25 3.25 1.25'/%3E%3C/svg%3E"); }
+/* Agent map: a route or the places an agent found, drawn as a diagram on the plot ink levels beside an itinerary that
+   names every stop and leg in text. One loud thing: the chosen route and its numbered stops, in full ink. Streets,
+   water and parks are structure, always quieter than the data. ps-am-* classes belong to this component. */
+.ps-agent-map { container-type:inline-size; display:grid; gap:var(--gap-group); min-width:0;
+  --am-ground: var(--surface);
+  --am-water: color-mix(in srgb, var(--ink) 6%, var(--surface));
+  --am-route: var(--ink);
+  --am-other: color-mix(in srgb, var(--ink) 34%, var(--surface)); }
+.ps-agent-map p { margin:0; text-wrap:pretty; }
+.ps-am-fig { color:var(--muted); font:var(--weight-regular) var(--text-label)/var(--leading-ui) var(--mono); font-variant-numeric:tabular-nums; }
 
-/* Map colors derive from the neutral roles plus two source hues, so a host theme carries through.
-   Roads lift off the land by the same --control-tint that lifts controls off a dark panel. */
-.ps-agent-map {
-  --am-land: var(--well);
-  --am-block: color-mix(in srgb, var(--ink) 4%, var(--well));
-  --am-road: color-mix(in srgb, var(--ink) calc(var(--control-tint) * 1.6), var(--raised));
-  --am-water: color-mix(in srgb, var(--source-cloud) 22%, var(--well));
-  --am-water-ink: color-mix(in srgb, var(--source-cloud) 72%, var(--muted));
-  --am-park: color-mix(in srgb, var(--source-network) 16%, var(--well));
-  --am-park-ink: color-mix(in srgb, var(--source-network) 64%, var(--muted));
-  --am-alt: color-mix(in srgb, var(--ink) 30%, var(--well));
-  container: ps-agent-map / inline-size;
-  display: grid; gap: var(--gap-group); width: 100%; max-width: 52rem; min-width: 0;
+/* The question is quoted, not drawn as a chat bubble; the answer is plain prose at reading width. */
+.ps-am-asked { display:grid; gap:var(--gap-caption); }
+/* The same quiet label as a person's turn in a message thread. */
+.ps-am-asked-label { color:var(--muted); font:var(--weight-medium) var(--text-caption)/var(--leading-ui) var(--sans); }
+.ps-am-answer { max-width:var(--prose-measure); }
+
+.ps-am-body { display:grid; grid-template-columns:minmax(15rem, 19rem) minmax(0, 1fr); gap:var(--gap-group); align-items:stretch; }
+.ps-am-plan { display:grid; align-content:start; gap:var(--gap-group); min-width:0; }
+
+/* Travel modes: the library's segmented control, each mode with its time under its name so all fit on one row. */
+.ps-am-modes { margin:0; padding:var(--s-4); border:0; min-width:0; }
+.ps-am-modes span { flex-direction:column; gap:0; white-space:nowrap; line-height:var(--leading-title); }
+.ps-am-modes .ps-am-fig { font-size:var(--text-caption); }
+.ps-am-modes input:checked + span .ps-am-fig { color:var(--ink); }
+
+/* Itinerary: numbered stops joined by the leg, drawn in the route's own line so the list and the map read as one. */
+.ps-am-stops,.ps-am-places { display:grid; margin:0; padding:0; list-style:none; }
+.ps-am-stop { display:grid; grid-template-columns:var(--s-24) minmax(0, 1fr); column-gap:var(--s-12); }
+.ps-am-node { display:grid; place-items:center; width:var(--s-24); height:var(--s-24); border-radius:50%; background:var(--am-route); color:var(--am-ground); font:var(--weight-strong) var(--text-caption)/1 var(--mono); font-variant-numeric:tabular-nums; }
+.ps-am-stop-text { display:grid; gap:var(--s-2); padding-top:var(--s-2); }
+.ps-am-stop-text b { font-weight:var(--weight-medium); line-height:var(--leading-title); }
+.ps-am-stop-text span { color:var(--muted); font-size:var(--text-label); }
+.ps-am-leg { grid-column:1 / -1; display:grid; grid-template-columns:var(--s-24) minmax(0, 1fr); column-gap:var(--s-12); }
+.ps-am-leg[hidden],.ps-am-other[hidden] { display:none; }
+.ps-am-leg-text { display:grid; gap:var(--gap-caption); align-content:center; padding-block:var(--s-16); }
+.ps-am-leg-head { display:flex; flex-wrap:wrap; gap:var(--s-8); align-items:baseline; font-size:var(--text-label); font-weight:var(--weight-medium); }
+.ps-am-leg-via { color:var(--muted); font-size:var(--text-label); line-height:var(--leading-ui); }
+/* The connector is the route's line turned upright: round dots for walking, a solid rule for a vehicle. */
+.ps-am-line { justify-self:center; width:0; min-height:var(--s-24); border-inline-start:3px dotted var(--am-route); }
+.ps-am-line[data-am-line="solid"] { border-inline-start-style:solid; }
+.ps-am-line[data-am-quiet] { border-inline-start-color:var(--am-other); }
+
+/* The other way: the gray line on the map, named in text, with one action to take it instead. */
+.ps-am-other { display:grid; grid-template-columns:var(--s-24) minmax(0, 1fr); column-gap:var(--s-12); padding-top:var(--s-8); border-top:1px solid var(--line); }
+.ps-am-other .ps-am-leg-head,.ps-am-other .ps-am-leg-via { color:var(--muted); }
+.ps-am-other .ps-am-leg-text { padding-block:var(--s-12) var(--s-8); }
+.ps-am-take { justify-self:start; margin-top:var(--s-8); display:inline-flex; align-items:center; min-height:var(--control-height); padding:0 var(--control-inset-inline); border:0; border-radius:var(--r-8); background:var(--well); color:var(--ink); font:var(--weight-medium) var(--text-label)/1 var(--sans); white-space:nowrap; cursor:pointer; transition:background var(--hover) ease; }
+.ps-am-take:hover { background:var(--fill-hover); }
+.ps-am-take:active { transform:scale(.97); }
+
+/* Places: each row is one button; its number is its pin. The connector between rows is the walk to the next. */
+.ps-am-places li { display:grid; grid-template-columns:var(--s-24) minmax(0, 1fr); }
+.ps-am-places li > .ps-am-place { grid-column:1 / -1; }
+.ps-am-place { display:grid; grid-template-columns:var(--s-24) minmax(0, 1fr) auto; column-gap:var(--s-12); align-items:start; padding:var(--s-8); margin-inline:calc(-1 * var(--s-8)); width:calc(100% + var(--s-16)); border:0; border-radius:var(--r-8); background:transparent; color:var(--ink); font:inherit; text-align:start; cursor:pointer; transition:background var(--hover) ease; }
+.ps-am-place:hover,.ps-am-place[data-am-hot] { background:var(--fill-hover); }
+.ps-am-place[aria-pressed="true"] { background:var(--fill-selected); }
+.ps-am-place-text { display:grid; gap:var(--s-2); padding-top:var(--s-2); }
+.ps-am-place-text b { font-weight:var(--weight-medium); line-height:var(--leading-title); }
+.ps-am-kind { color:var(--muted); font-size:var(--text-label); }
+.ps-am-desc { color:var(--muted); font-size:var(--text-label); line-height:var(--leading-ui); }
+.ps-am-picked { visibility:hidden; padding-top:var(--s-4); color:var(--ink); font:var(--weight-medium) var(--text-caption)/var(--leading-ui) var(--mono); }
+.ps-am-place[aria-pressed="true"] .ps-am-picked { visibility:visible; }
+.ps-am-places .ps-am-line { grid-column:1; min-height:var(--s-16); }
+
+/* The map: hairline structure on the plot levels, one tint for water, the route and stops in full ink. */
+.ps-am-map { margin:0; min-height:24rem; overflow:hidden; border-radius:var(--r-12); background:var(--am-ground); box-shadow:var(--edge); }
+.ps-am-drawing { display:block; width:100%; height:100%; }
+.ps-am-water { fill:var(--am-water); }
+.ps-am-shore { fill:none; stroke:var(--plot-axis); stroke-width:1; }
+.ps-am-minor path { fill:none; stroke:var(--plot-grid); stroke-width:1; }
+.ps-am-major path,.ps-am-major-line { fill:none; stroke:var(--plot-axis); stroke-width:1; }
+.ps-am-avenue { fill:none; stroke:var(--plot-axis); stroke-width:2.5; }
+.ps-am-park { fill:var(--am-ground); stroke:var(--plot-axis); stroke-width:1; stroke-dasharray:3 4; }
+.ps-am-labels text { fill:var(--muted); font:var(--weight-regular) var(--text-caption) var(--sans); paint-order:stroke; stroke:var(--am-ground); stroke-width:4px; stroke-linejoin:round; }
+.ps-am-labels .ps-am-area { letter-spacing:var(--tracking-label); text-transform:uppercase; fill:color-mix(in srgb, var(--muted) 80%, var(--am-ground)); }
+.ps-am-labels .ps-am-named { font-style:italic; }
+.ps-am-labels .ps-am-on-water { stroke:var(--am-water); }
+
+.ps-am-r { fill:none; stroke:var(--am-route); stroke-linecap:round; stroke-linejoin:round; }
+.ps-am-r[data-am-line="dots"] { stroke-dasharray:0 7; stroke-width:4; }
+.ps-am-r[data-am-line="solid"] { stroke-width:3.5; }
+.ps-am-r[data-am-state="other"] { stroke:var(--am-other); }
+.ps-am-r[data-am-state="off"] { display:none; }
+
+.ps-am-pin circle { fill:var(--am-route); stroke:var(--am-ground); stroke-width:3; }
+.ps-am-pin text { fill:var(--am-ground); font:var(--weight-strong) var(--text-caption) var(--mono); }
+.ps-agent-map[data-am-variant="places"] .ps-am-pin { cursor:pointer; }
+.ps-am-pin[data-am-hot] circle,.ps-am-pin[data-am-picked] circle { fill:var(--am-ground); stroke:var(--am-route); stroke-width:2.5; }
+.ps-am-pin[data-am-hot] text,.ps-am-pin[data-am-picked] text { fill:var(--am-route); }
+.ps-am-pin-label { fill:var(--ink); font:var(--weight-medium) var(--text-label) var(--sans); paint-order:stroke; stroke:var(--am-ground); stroke-width:5px; stroke-linejoin:round; }
+.ps-am-pin-label[hidden] { display:none; }
+.ps-am-pin-time { fill:var(--muted); font:var(--weight-regular) var(--text-caption) var(--mono); }
+
+.ps-am-note { display:flex; flex-wrap:wrap; gap:var(--s-8); align-items:baseline; color:var(--muted); font-size:var(--text-caption); }
+
+/* The list layout reads the places first, full width, with the map beneath them. */
+.ps-agent-map[data-am-layout="list"] .ps-am-body { grid-template-columns:minmax(0, 1fr); }
+.ps-agent-map[data-am-layout="list"] .ps-am-places { gap:var(--s-4); }
+.ps-agent-map[data-am-layout="list"] .ps-am-place-text { grid-template-columns:minmax(0, 1fr); max-width:var(--prose-measure); }
+.ps-agent-map[data-am-layout="list"] .ps-am-map { min-height:0; height:22rem; }
+
+/* Narrow: the map leads, framed on the route at the drawing's own scale, and the itinerary follows. */
+@container (max-width: 40rem) {
+  .ps-am-body { grid-template-columns:minmax(0, 1fr); }
+  .ps-am-map { order:-1; min-height:0; height:21rem; }
+  .ps-agent-map[data-am-layout="list"] .ps-am-map { order:0; }
 }
-.ps-am-ask { justify-self: end; max-width: min(34rem, 88%); padding: var(--s-12) var(--s-16); background: var(--well); border-radius: var(--r-16); font-size: var(--text-body); line-height: var(--leading-body); text-wrap-style:pretty; }
-.ps-am-answer { max-width: var(--prose-measure); font-size: var(--text-body); line-height: var(--leading-body); text-wrap-style:pretty; }
-.ps-am-figure { display: grid; gap: var(--gap-related); margin: 0; min-width: 0; }
-.ps-am-summary { max-width: var(--prose-measure); font-size: var(--text-label); text-wrap-style:pretty; }
-.ps-am-caption { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-8); color: var(--muted); font-size: var(--text-caption); }
-
-.ps-am-frame { position: relative; isolation: isolate; display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--surface); border-radius: var(--r-16); box-shadow: var(--edge); }
-.ps-am-stage { position: relative; flex: none; aspect-ratio: 16 / 10; overflow: hidden; container-type: size; background: var(--am-land); }
-/* The canvas covers the stage like a map viewport: it never shrinks below the drawing's own scale and
-   centers on --am-fx/--am-fy, clamped so the edge of the drawing never shows. */
-.ps-am-canvas {
-  --am-w: max(100cqw, 160cqh, 640px);
-  position: absolute; top: 50%; left: 50%; width: var(--am-w); height: calc(var(--am-w) * .625);
-  translate: clamp(calc(50cqw - var(--am-w)), calc(var(--am-w) * var(--am-fx, .5) * -1), -50cqw) clamp(calc(50cqh - var(--am-w) * .625), calc(var(--am-w) * .625 * var(--am-fy, .5) * -1), -50cqh);
-}
-.ps-am-map { display: block; width: 100%; height: 100%; font-family: var(--sans); }
-.ps-am-map .am-land { fill: var(--am-land); }
-.ps-am-map .am-block { fill: var(--am-block); }
-.ps-am-map .am-plaza { fill: var(--am-road); }
-.ps-am-map .am-water { fill: var(--am-water); }
-.ps-am-map .am-park { fill: var(--am-park); }
-.ps-am-map .am-road { fill: none; stroke: var(--am-road); stroke-linecap: round; stroke-linejoin: round; }
-.ps-am-map .am-major { stroke-width: 7; }
-.ps-am-map .am-street { stroke-width: 4; }
-.ps-am-map .am-lane { stroke-width: 2.5; }
-.ps-am-map .am-alley { stroke-width: 1.5; }
-.ps-am-map .am-wall { fill: none; stroke: color-mix(in srgb, var(--ink) 14%, var(--well)); stroke-width: 1.5; stroke-dasharray: 5 4; }
-.ps-am-map text { fill: var(--muted); font-weight: var(--weight-medium); paint-order: stroke; stroke: var(--am-land); stroke-width: 3; stroke-linejoin: round; }
-.ps-am-map .am-label-water { fill: var(--am-water-ink); stroke: var(--am-water); }
-.ps-am-map .am-label-park { fill: var(--am-park-ink); stroke: var(--am-park); }
-.ps-am-map .am-label-area { fill: color-mix(in srgb, var(--ink) 42%, var(--well)); }
-
-/* Routes: the chosen route is ink, its alternative a quieter gray; walking routes are dotted. */
-.ps-am-route[data-am-state="hidden"] { display: none; }
-.ps-am-route path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.ps-am-route .am-casing { stroke: var(--raised); stroke-width: 8.5; }
-.ps-am-route .am-line { stroke: var(--ink); stroke-width: 5; }
-.ps-am-route[data-am-state="alternative"] .am-line { stroke: var(--am-alt); }
-.ps-am-route[data-am-dotted] .am-casing { stroke-width: 8.5; stroke-dasharray: 0 9.5; }
-.ps-am-route[data-am-dotted] .am-line { stroke-width: 5; stroke-dasharray: 0 9.5; }
-.ps-am-draw { fill: none; stroke: #fff; stroke-width: 32; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; }
-
-/* Pins sit in canvas coordinates (--x, --y as percentages of the drawing). They are pointer shortcuts;
-   the cards and rows carry the same places for keyboard and assistive technology. */
-.ps-am-pins { position: absolute; inset: 0; pointer-events: none; }
-.ps-am-pin { position: absolute; left: var(--x); top: var(--y); z-index: 1; display: flex; flex-direction: column; align-items: center; gap: var(--s-4); translate: -50% calc(-100% + var(--s-4)); pointer-events: auto; cursor: pointer; }
-.ps-am-pin[data-am-kind="rating"] { translate: -50% -50%; }
-.ps-am-pin[data-am-below] { flex-direction: column-reverse; translate: -50% calc(-1 * var(--s-4)); }
-.ps-am-pin[data-am-kind="route"] { cursor: default; }
-.ps-am-tag { display: inline-flex; align-items: baseline; gap: var(--s-8); padding: var(--s-4) var(--s-12); background: var(--raised); color: var(--ink); border-radius: var(--r-pill); box-shadow: var(--edge); font-size: var(--text-label); font-weight: var(--weight-medium); line-height: var(--leading-ui); white-space: nowrap; font-variant-numeric: tabular-nums; transition: box-shadow var(--hover) ease, background var(--press) var(--ease-out), color var(--press) var(--ease-out); }
-.ps-am-tag-time { color: var(--muted); font-weight: var(--weight-regular); }
-.ps-am-pin[data-am-kind="end"] .ps-am-tag { background: var(--primary); color: var(--on-primary); }
-.ps-am-pin[data-am-kind="end"] .ps-am-tag-time { color: color-mix(in srgb, var(--on-primary) 66%, var(--primary)); }
-.ps-am-pin[data-am-kind="route"] .ps-am-tag { padding-inline: var(--s-8); color: var(--muted); font-size: var(--text-caption); font-weight: var(--weight-regular); }
-.ps-am-pin-dot { width: var(--s-8); height: var(--s-8); border-radius: 50%; background: var(--strong-line); box-shadow: 0 0 0 2px var(--raised); }
-.ps-am-pin[data-am-kind="end"] .ps-am-pin-dot { background: var(--primary); }
-.ps-am-pin:hover .ps-am-tag,.ps-am-pin[data-am-hover] .ps-am-tag { box-shadow: var(--edge-hover); }
-.ps-am-pin[data-am-kind="route"]:hover .ps-am-tag { box-shadow: var(--edge); }
-.ps-am-pin[data-am-selected] { z-index: 2; }
-.ps-am-pin[data-am-selected] .ps-am-tag { box-shadow: 0 0 0 1.5px var(--line-selected), var(--edge); }
-.ps-am-pin[data-am-kind="rating"][data-am-selected] .ps-am-tag { background: var(--primary); color: var(--on-primary); box-shadow: var(--edge-hover); }
-.ps-am-pin .ps-i-star { width: .8125em; height: .8125em; vertical-align: -.0625em; }
-.ps-am-here { position: absolute; left: var(--x); top: var(--y); width: var(--s-12); height: var(--s-12); translate: -50% -50%; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 3px var(--raised); }
-
-/* Floating controls are solid raised surfaces with the house edge; no translucency over the map. */
-.ps-am-tools { position: absolute; inset: var(--s-12) var(--s-12) auto; z-index: 3; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--gap-controls); pointer-events: none; }
-.ps-am-tools > * { pointer-events: auto; }
-.ps-am-tools[data-am-align="end"] { justify-content: flex-end; }
-.ps-am-mode-wrap { position: relative; }
-.ps-am-control { display: inline-flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; gap: var(--s-8); min-height: var(--control-height); padding: var(--s-4) var(--s-12); border: 0; border-radius: var(--r-pill); background: var(--raised); color: var(--ink); box-shadow: var(--edge); font-size: var(--text-label); font-weight: var(--weight-medium); cursor: pointer; transition: box-shadow var(--hover) ease, background var(--hover) ease, transform var(--press) var(--ease-out); }
-.ps-am-control:hover,.ps-am-control[aria-expanded="true"] { background: color-mix(in srgb, var(--ink) 4%, var(--raised)); box-shadow: var(--edge-hover); }
-.ps-am-control:active { transform: scale(.97); }
-.ps-am-control:focus-visible { outline-offset: var(--s-2); }
-.ps-am-control .ps-i-chevron { color: var(--muted); transition: rotate var(--press) var(--ease-out); }
-.ps-am-control[aria-expanded="true"] .ps-i-chevron { rotate: 180deg; }
-.ps-am-control-time { color: var(--muted); font-weight: var(--weight-regular); font-variant-numeric: tabular-nums; }
-.ps-am-icon-button { width: var(--control-height); padding: 0; }
-.ps-am-modes { position: absolute; top: 0; left: 0; z-index: 4; display: grid; width: max-content; min-width: 100%; padding: var(--s-4); background: var(--raised); border-radius: var(--r-12); box-shadow: var(--edge), var(--shadow-raised); transform-origin: top left; }
-.ps-am-modes [role="option"] { display: flex; white-space: nowrap; align-items: center; gap: var(--s-12); min-height: var(--control-height); padding: var(--s-4) var(--s-12); border-radius: var(--r-8); font-size: var(--text-label); cursor: pointer; transition: background var(--hover) ease; }
-.ps-am-modes [role="option"]:hover { background: var(--fill-hover); }
-.ps-am-modes [role="option"]:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; background: var(--fill-hover); }
-.ps-am-modes [role="option"][aria-selected="true"] { background: var(--fill-selected); }
-.ps-am-modes [role="option"] .ps-i:first-child { color: var(--muted); }
-.ps-am-modes [role="option"] .ps-i-check { margin-inline-start: auto; visibility: hidden; }
-.ps-am-modes [role="option"][aria-selected="true"] .ps-i-check { visibility: visible; }
-
-/* Place cards float over the bottom of the map on wide frames and stack beneath it when narrow. */
-.ps-am-cards { position: absolute; inset: auto var(--s-12) var(--s-12); z-index: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-12); }
-.ps-am-card { display: flex; align-items: center; gap: var(--s-12); min-width: 0; padding: var(--s-12); border: 0; border-radius: var(--r-12); background: var(--raised); color: var(--ink); box-shadow: var(--edge); text-align: start; cursor: pointer; transition: box-shadow var(--hover) ease, transform var(--press) var(--ease-out); }
-.ps-am-card:hover { box-shadow: var(--edge-hover); }
-.ps-am-card:active { transform: scale(.985); }
-.ps-am-card[aria-pressed="true"] { box-shadow: 0 0 0 1.5px var(--line-selected), 0 1px 2px color-mix(in srgb, var(--shadow-color) var(--edge-drop), transparent); }
-.ps-am-card:focus-visible,.ps-am-row:focus-visible { outline-offset: var(--s-2); }
-.ps-am-tile { display: grid; flex: none; place-items: center; width: var(--s-48); height: var(--s-48); border-radius: var(--r-8); background: var(--well); color: var(--muted); }
-.ps-am-tile .ps-i { width: 1.25rem; height: 1.25rem; }
-.ps-am-text { display: grid; min-width: 0; }
-.ps-am-kicker,.ps-am-meta { color: var(--muted); font-size: var(--text-label); }
-.ps-am-name { font-size: var(--text-body); font-weight: var(--weight-medium); line-height: var(--leading-title); }
-.ps-am-meta { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--s-4); font-variant-numeric: tabular-nums; }
-.ps-am-meta .ps-i-star { width: .875em; height: .875em; }
-.ps-am-rating { display: inline-flex; align-items: center; gap: var(--s-4); color: var(--ink); }
-/* The separator travels with the category it introduces, so a wrapped line never ends on a bare dot. */
-.ps-am-meta > span[aria-hidden="true"] { display: none; }
-.ps-am-meta > span[aria-hidden="true"] + .ps-visually-hidden + span::before { content: "·" / ""; margin-inline-end: var(--s-4); }
-.ps-am-desc { color: var(--muted); font-size: var(--text-label); text-wrap-style:pretty; }
-/* Selection is named in words as well as shown by the ring or fill. */
-.ps-am-chosen { display: none; flex: none; align-items: center; gap: var(--s-4); margin-inline-start: auto; align-self: flex-start; color: var(--ink); font-size: var(--text-caption); font-weight: var(--weight-medium); }
-[aria-pressed="true"] > .ps-am-chosen { display: inline-flex; }
-
-/* Recommendations: a scrolling list beside the map; selection is a row fill, the map pin turns ink. */
-.ps-am-panel { position: absolute; top: var(--s-12); right: var(--s-12); bottom: var(--s-12); z-index: 2; width: min(46%, 24rem); overflow: auto; overscroll-behavior: contain; padding: var(--s-4); background: var(--raised); border-radius: var(--r-12); box-shadow: var(--edge); }
-.ps-am-rows { display: grid; margin: 0; padding: 0; list-style: none; }
-.ps-am-rows > li { position: relative; }
-.ps-am-rows > li + li::before { content: ''; position: absolute; top: 0; inset-inline: var(--s-12); border-top: 1px solid var(--line); }
-.ps-am-row { display: flex; align-items: flex-start; gap: var(--s-12); width: 100%; padding: var(--s-12); border: 0; border-radius: var(--r-8); background: transparent; color: var(--ink); text-align: start; cursor: pointer; transition: background var(--fast) var(--ease-out); }
-.ps-am-row:hover,.ps-am-row[data-am-hover] { background: var(--fill-hover); }
-.ps-am-row[aria-pressed="true"] { background: var(--fill-selected); }
-/* On the raised panel the selected fill takes muted text just under 4.5:1 in dark; lift it toward ink. */
-.ps-am-panel .ps-am-row[aria-pressed="true"] :is(.ps-am-meta, .ps-am-desc) { color: color-mix(in srgb, var(--muted) 80%, var(--ink)); }
-.ps-am-row .ps-am-text { gap: var(--gap-caption); }
-
-/* List: the places read first as full rows; the map follows as a reference. */
-.ps-am-list .ps-am-row { gap: var(--s-16); padding-block: var(--s-16); }
-.ps-am-list .ps-am-tile { width: var(--s-64); height: var(--s-64); border-radius: var(--r-12); }
-.ps-am-list .ps-am-tile .ps-i { width: 1.5rem; height: 1.5rem; }
-.ps-am-list .ps-am-name { font-size: var(--text-lead); }
-.ps-am-list .ps-am-meta { font-size: var(--text-ui); }
-.ps-am-address { color: var(--muted); font-size: var(--text-caption); }
-.ps-am-list .ps-am-desc { color: var(--ink); font-size: var(--text-body); line-height: var(--leading-body); max-width: var(--prose-measure); }
-
-/* Detail card. kit-e.js anchors it beside its pin or leg while --am-anchor is 1 (wide frames), clamped clear of
-   the controls, stop cards and list; otherwise it opens in place under the chosen entry. */
-.ps-am-frame { --am-anchor: 1; }
-.ps-am-route .am-hit { stroke: transparent; stroke-width: 22; pointer-events: stroke; cursor: pointer; }
-.ps-am-route[data-am-leg]:hover .am-casing { stroke: color-mix(in srgb, var(--line-selected) 45%, var(--raised)); }
-.ps-am-route[data-am-open] .am-casing { stroke: var(--line-selected); }
-/* --am-min-width is the narrowest an anchored card may become to stay clear of its anchor; kit-e.js reads it in rem. */
-.ps-am-detail { --am-min-width: 16rem; min-width: 0; grid-column: 1 / -1; }
-.ps-am-detail[data-am-placement="anchored"] { position: absolute; z-index: 3; width: min(24rem, var(--am-room, 24rem)); }
-.ps-am-detail[data-am-placement="anchored"] .ps-am-sheet { max-height: var(--am-max, none); overflow: auto; overscroll-behavior: contain; box-shadow: var(--edge), var(--shadow-raised); }
-/* The travel-mode menu drops over the map's top band; an anchored card steps aside while it is open. */
-.ps-am-frame:has([data-am-modes]:not([hidden])) > .ps-am-detail[data-am-placement="anchored"] { visibility: hidden; }
-.ps-am-rows .ps-am-detail { padding: var(--s-4) var(--s-4) var(--s-8); }
-/* In the list layout the card lines up with the row text, past the tile. */
-.ps-am-list .ps-am-rows .ps-am-detail { padding-inline-start: calc(var(--s-12) + var(--s-64) + var(--s-16)); }
-.ps-am-sheet { display: grid; gap: var(--s-16); padding: var(--s-16); border-radius: var(--r-12); background: var(--raised); color: var(--ink); box-shadow: var(--edge); text-align: start; }
-.ps-am-sheet header,.ps-am-detail-why { display: grid; gap: var(--gap-caption); }
-.ps-am-detail-title { margin: 0; font-size: var(--text-ui); font-weight: var(--weight-medium); line-height: var(--leading-title); }
-.ps-am-sheet p { margin: 0; }
-.ps-am-detail-caption,.ps-am-detail-source { color: var(--muted); font-size: var(--text-caption); }
-.ps-am-detail-text { font-size: var(--text-label); }
-.ps-am-detail-route { display: grid; gap: var(--s-8); }
-.ps-am-detail-stops { display: flex; gap: var(--s-2); }
-.ps-am-detail-stops i { flex: 1; height: 6px; border-radius: var(--r-pill); background: var(--well); }
-.ps-am-detail-stops i[data-state="done"] { background: color-mix(in srgb, var(--ink) 26%, var(--well)); }
-.ps-am-detail-stops i[data-state="current"] { background: var(--ink); }
-.ps-am-legs { display: grid; margin: 0; padding: 0; list-style: none; }
-.ps-am-leg { display: grid; grid-template-columns: 3rem minmax(0, 1fr) max-content max-content; align-items: baseline; gap: var(--s-8); width: calc(100% + var(--s-16)); margin-inline: calc(-1 * var(--s-8)); padding: var(--s-8); border: 0; border-radius: var(--r-8); background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; transition: background var(--hover) ease; }
-.ps-am-leg:hover { background: var(--fill-hover); }
-.ps-am-leg:focus-visible { outline-offset: calc(-1 * var(--s-2)); }
-.ps-am-leg-label { display: grid; gap: var(--gap-caption); min-width: 0; }
-.ps-am-leg-name { font-size: var(--text-label); }
-.ps-am-leg-meta { color: var(--muted); font-size: var(--text-label); font-variant-numeric: tabular-nums; }
-.ps-am-leg .ps-i-chevron { align-self: center; color: var(--muted); transition: rotate var(--press) var(--ease-out); }
-.ps-am-leg[aria-expanded="true"] .ps-i-chevron { rotate: 180deg; }
-.ps-am-leg-body { display: grid; gap: var(--s-12); padding-block: var(--s-4) var(--s-8); }
-.ps-am-detail-found { display: grid; gap: var(--s-12); padding-top: var(--s-16); border-top: 1px solid var(--line-raised); }
-.ps-am-sheet dl { margin: 0; }
-.ps-am-detail-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); gap: var(--s-12) var(--s-16); }
-.ps-am-detail-facts:has(> :nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.ps-am-detail-facts > div { display: grid; align-content: start; gap: var(--gap-caption); min-width: 0; }
-.ps-am-sheet dt { color: var(--muted); font-size: var(--text-caption); }
-.ps-am-sheet dd { margin: 0; font-size: var(--text-label); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.ps-am-detail-meter > div { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; gap: var(--s-12); }
-.ps-am-detail-meter dd { display: flex; align-items: center; gap: var(--s-12); }
-.ps-am-meter-track { flex: 1; height: 6px; overflow: hidden; border-radius: var(--r-pill); background: var(--well); }
-.ps-am-meter-track i { display: block; height: 100%; background: var(--series); }
-
-/* Expanded: the frame lifts into a centered sheet at the map's own proportions, so the map grows without cropping. */
-.ps-am-frame[data-am-expanded] { position: fixed; top: 50%; left: 50%; z-index: 40; translate: -50% -50%; width: min(calc(100vw - var(--s-32)), calc((100vh - var(--s-32)) * 1.6), 80rem); max-height: calc(100vh - var(--s-32)); box-shadow: var(--shadow-sheet), 0 0 0 100vmax color-mix(in srgb, var(--bg) 78%, transparent); }
-
-/* Motion is driven from kit-e.js with the Web Animations API, so it can be canceled and skipped.
-   Until the map first scrolls into view, the map layer waits at its entrance start; the markup is the final state. */
-.ps-agent-map[data-am-reveal="pending"] [data-am-fade] { opacity: 0; }
-.ps-agent-map[data-am-reveal="pending"] .ps-am-draw { stroke-dashoffset: 1; }
-/* Keyboard-initiated changes land at once. */
-.ps-agent-map[data-am-instant] *,.ps-agent-map[data-am-instant] *::before { transition: none !important; }
-
-@container ps-agent-map (max-width: 36rem) {
-  .ps-am-frame { --am-anchor: 0; }
-  .ps-am-stage { aspect-ratio: 1; }
-  /* A small square map cannot spare its top band: the travel mode and expand controls sit in a bar above it,
-     so they never cover a pin or a route time. */
-  .ps-am-tools:has(.ps-am-mode-wrap) { position: static; order: -1; padding: var(--s-8); }
-  .ps-am-cards,.ps-am-panel { position: static; width: auto; overflow: visible; box-shadow: none; }
-  .ps-am-cards { grid-template-columns: minmax(0, 1fr); gap: var(--s-8); padding: var(--s-8); }
-  .ps-am-panel { padding: var(--s-4); border-radius: 0; background: var(--surface); }
-  .ps-am-frame[data-am-expanded] { width: calc(100vw - var(--s-32)); }
-  .ps-am-frame[data-am-expanded] .ps-am-stage { flex-shrink: 1; min-height: 12rem; }
-  .ps-am-frame[data-am-expanded] .ps-am-cards,.ps-am-frame[data-am-expanded] .ps-am-panel { flex: 0 1 auto; min-height: 0; overflow: auto; }
-  .ps-am-list .ps-am-row { gap: var(--s-12); }
-  /* A narrow row sets the category on its own line under the rating, the same in every row, instead of wrapping wherever it runs out. */
-  .ps-am-row .ps-am-meta > span[aria-hidden="true"] + .ps-visually-hidden + span { flex-basis: 100%; }
-  .ps-am-row .ps-am-meta > span[aria-hidden="true"] + .ps-visually-hidden + span::before { content: none; }
-  .ps-am-list .ps-am-tile { width: var(--s-48); height: var(--s-48); }
-  .ps-am-list .ps-am-rows .ps-am-detail { padding-inline-start: var(--s-4); }
+@media (prefers-reduced-motion: no-preference) {
+  .ps-am-r { transition:stroke var(--settle) var(--ease-out); }
+  .ps-am-pin circle,.ps-am-pin text { transition:fill var(--hover) ease, stroke var(--hover) ease; }
 }
 @media (forced-colors: active) {
-  .ps-am-card[aria-pressed="true"],.ps-am-row[aria-pressed="true"],.ps-am-pin[data-am-selected] .ps-am-tag { outline: 2px solid Highlight; }
-  .ps-am-route .am-line { stroke: CanvasText; }
-  .ps-am-sheet { outline: 1px solid CanvasText; }
+  .ps-am-r,.ps-am-avenue { stroke:CanvasText; }
+  .ps-am-r[data-am-state="other"] { stroke:GrayText; }
+  .ps-am-pin circle { fill:CanvasText; stroke:Canvas; }
+  .ps-am-pin text { fill:Canvas; }
+  .ps-am-place[aria-pressed="true"] { outline:2px solid Highlight; }
+  .ps-am-line { border-inline-start-color:CanvasText; }
 }
 
 /* Kit F: reporting figures. KPI card, KPI strip and goal progress share one figure style, one delta pill and one track. */

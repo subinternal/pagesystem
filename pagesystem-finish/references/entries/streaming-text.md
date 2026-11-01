@@ -65,7 +65,7 @@ A reply streaming under the question that asked for it, where Stop keeps what ha
 <main><header class="ps-stack-tight"><p class="ps-kicker">Component / Agents</p><h1 class="ps-heading">Streaming text, in a message</h1><p class="ps-note">A reply streaming under the question that asked for it, with Stop to keep what has arrived and Regenerate to start again.</p></header>
 <section class="ps-stream" data-ps-streaming-text data-stream-autoplay data-stream-ms="22" aria-label="Sample message with a streaming reply"><div class="ps-stream-bar"><div class="ps-stream-status"><p class="ps-stream-state" data-stream-state>Reply complete</p><p class="ps-stream-progress" data-stream-progress></p></div>
 <div class="ps-stream-controls"><button class="ps-button" type="button" data-stream-stop><span class="ps-i ps-i-stop" aria-hidden="true"></span>Stop</button><button class="ps-button" type="button" data-stream-replay><span class="ps-i ps-i-replay" aria-hidden="true"></span>Regenerate</button></div></div>
-<div class="ps-stream-turn"><p class="ps-stream-ask">What changed in the 2.4 release, in plain terms?</p>
+<div class="ps-stream-turn"><p class="ps-stream-ask"><span class="ps-stream-who">You</span>What changed in the 2.4 release, in plain terms?</p>
 <article class="ps-stream-reply" aria-label="Reply" data-stream-reply><p>Three things you will notice, and one you will not:</p>
 <ul><li>Exports are faster. Large workspaces export in about a third of the time, because files are written in parallel.</li><li>Comments can be resolved from the notification itself, without opening the document.</li><li>Shared links now expire after 30 days by default. Owners can still choose “never”.</li></ul>
 <p>Behind the scenes, sign-in moved to a new session service. Nothing changes for you unless you use single sign-on, in which case your admin should confirm the new callback address.</p></article></div>
@@ -81,7 +81,7 @@ A short meeting summary streaming into a narrow side panel, with Replay as the o
 <main><header class="ps-stack-tight"><p class="ps-kicker">Component / Agents</p><h1 class="ps-heading">Streaming text, summary card</h1><p class="ps-note">A short meeting summary streaming into a narrow side panel, with Replay as the only control.</p></header>
 <section class="ps-stream ps-stream-summary" data-ps-streaming-text data-stream-autoplay data-stream-ms="36" aria-label="Sample streaming summary"><div class="ps-stream-bar"><div class="ps-stream-status"><p class="ps-stream-state" data-stream-state>Reply complete</p><p class="ps-stream-progress" data-stream-progress></p></div>
 <div class="ps-stream-controls"><button class="ps-button" type="button" data-stream-replay><span class="ps-i ps-i-replay" aria-hidden="true"></span>Replay</button></div></div>
-<article class="ps-stream-reply" aria-label="Summary of the design review" data-stream-reply><h2>Design review, 28 October</h2>
+<article class="ps-stream-reply" aria-label="Summary of the design review" data-stream-reply><h2>Design review, October 28</h2>
 <p>The team chose the two-column settings layout and dropped the tabbed version, which hid billing too deep.</p>
 <p>Open question: whether audit logs belong under Security or Workspace. Ana will bring both options on Friday.</p></article>
 <p class="ps-visually-hidden" role="status" data-stream-live></p>

@@ -57,7 +57,7 @@ Native behavior: plan-card. It needs pagesystem.js (see ../implementation.md).
 ```html
 <main><header class="ps-stack-tight"><p class="ps-kicker">Component / Agents</p><h1 class="ps-heading">Plan card</h1><p class="ps-note">Review the steps an agent proposes, then approve, edit or reject the plan before anything runs.</p></header>
 <article class="ps-plan" data-ps-plan-card data-plan-state="pending" data-plan-visible="3" aria-labelledby="plan-title">
-<header class="ps-plan-head"><span class="ps-plan-mark" aria-hidden="true"><span class="ps-i ps-i-file"></span></span><div class="ps-plan-titles"><h2 id="plan-title">Full-text search for the docs</h2><p>Proposed by the docs agent · sample plan</p></div><span class="ps-badge" data-plan-badge>Awaiting approval</span></header>
+<header class="ps-plan-head"><div class="ps-plan-titles"><h2 id="plan-title">Full-text search for the docs</h2><p>Proposed by the docs agent · sample plan</p></div><span class="ps-badge" data-plan-badge>Awaiting approval</span></header>
 <p class="ps-plan-summary">Index every docs page and put search behind ⌘K. Results rank headings before body text and are cached at the edge.</p>
 <section class="ps-plan-steps" aria-labelledby="plan-steps"><div class="ps-plan-steps-head"><h3 id="plan-steps"><span class="ps-i ps-i-steps" aria-hidden="true"></span>Steps</h3><span data-plan-count>6 steps</span></div>
 <ol class="ps-plan-list" data-plan-list>
@@ -87,7 +87,7 @@ The person's auto-approve setting counts down in view; it pauses while they revi
 ```html
 <main><header class="ps-stack-tight"><p class="ps-kicker">Component / Agents</p><h1 class="ps-heading">Plan card with auto-approve</h1><p class="ps-note">Your auto-approve setting counts down in view; the timer pauses while you review the card and can be stopped.</p></header>
 <article class="ps-plan" data-ps-plan-card data-plan-state="pending" data-plan-visible="3" data-plan-auto="8" aria-labelledby="plan-auto-title">
-<header class="ps-plan-head"><span class="ps-plan-mark" aria-hidden="true"><span class="ps-i ps-i-file"></span></span><div class="ps-plan-titles"><h2 id="plan-auto-title">Full-text search for the docs</h2><p>Proposed by the docs agent · auto‑approve is on for this workspace · sample</p></div><span class="ps-badge" data-plan-badge>Awaiting approval</span></header>
+<header class="ps-plan-head"><div class="ps-plan-titles"><h2 id="plan-auto-title">Full-text search for the docs</h2><p>Proposed by the docs agent · sample plan</p></div><span class="ps-badge" data-plan-badge>Awaiting approval</span></header>
 <p class="ps-plan-summary">Index every docs page and put search behind ⌘K. Results rank headings before body text and are cached at the edge.</p>
 <section class="ps-plan-steps" aria-labelledby="plan-auto-steps"><div class="ps-plan-steps-head"><h3 id="plan-auto-steps"><span class="ps-i ps-i-steps" aria-hidden="true"></span>Steps</h3><span data-plan-count>6 steps</span></div>
 <ol class="ps-plan-list" data-plan-list>
@@ -117,7 +117,7 @@ An approved plan while the agent works through it, with done, in-progress, block
 ```html
 <main><header class="ps-stack-tight"><p class="ps-kicker">Component / Agents</p><h1 class="ps-heading">Plan card in progress</h1><p class="ps-note">An approved plan while the agent works through it, with done, active, blocked and pending steps.</p></header>
 <article class="ps-plan" data-ps-plan-card data-plan-state="running" data-plan-visible="6" aria-labelledby="plan-run-title">
-<header class="ps-plan-head"><span class="ps-plan-mark" aria-hidden="true"><span class="ps-i ps-i-file"></span></span><div class="ps-plan-titles"><h2 id="plan-run-title">Full-text search for the docs</h2><p>Approved by you at 10:42 AM · sample plan</p></div><span class="ps-badge" data-plan-badge>Awaiting approval</span></header>
+<header class="ps-plan-head"><div class="ps-plan-titles"><h2 id="plan-run-title">Full-text search for the docs</h2><p>Approved by you at 10:42 AM · sample plan</p></div><span class="ps-badge" data-plan-badge>Awaiting approval</span></header>
 <p class="ps-plan-summary">Index every docs page and put search behind ⌘K. Results rank headings before body text and are cached at the edge.</p>
 <section class="ps-plan-steps" aria-labelledby="plan-run-steps"><div class="ps-plan-steps-head"><h3 id="plan-run-steps"><span class="ps-i ps-i-steps" aria-hidden="true"></span>Steps</h3><span data-plan-count>6 steps</span></div>
 <ol class="ps-plan-list" data-plan-list>

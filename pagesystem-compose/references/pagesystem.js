@@ -257,6 +257,7 @@ PS_KITS.push(function kitA(root, { doc, win, listen, find, emit }) {
       const choice = model.selectedOptions[0]?.textContent || model.value;
       if (log) {
         const item = node('li', 'ps-message'); item.dataset.from = 'user';
+        item.append(node('span', 'ps-message-who', 'You'));
         if (sent.length) { const chips = node('ul', 'ps-attachments'); chips.dataset.layout = 'inline'; chips.setAttribute('aria-label', 'Attached files'); for (const f of sent) chips.append(attachment(f, 'ready', false)); item.append(chips); }
         if (text) item.append(node('div', 'ps-message-bubble', text));
         const meta = node('div', 'ps-message-meta'), now = new Date(), time = node('time', '', clock.format(now));
@@ -673,7 +674,8 @@ PS_KITS.push(function kitB(root, { doc, win, listen, find, emit }) {
       const ol = questions?.querySelector('[data-chat-question-list]'); ol?.replaceChildren();
       if (!chat) { transcript.append(node('p', 'ps-chats-none', 'Select a conversation to read it here.')); return; }
       chat.turns.forEach(([q, answer], i) => {
-        const turn = node('div', 'ps-chats-turn'), ask = node('p', 'ps-chats-ask', q), reply = node('div', 'ps-chats-answer');
+        const turn = node('div', 'ps-chats-turn'), ask = node('p', 'ps-chats-ask'), reply = node('div', 'ps-chats-answer');
+        ask.append(node('span', 'ps-chats-who', 'You'), q);
         ask.id = `${key}-q${i}`; ask.tabIndex = -1;
         for (const text of answer) reply.append(node('p', '', text));
         turn.append(ask, reply); transcript.append(turn);
@@ -1884,7 +1886,7 @@ PS_KITS.push(function kitD(root, { doc, win, listen, find, emit }) {
       const level = Number(el.getAttribute('aria-level')), start = Number(el.dataset.start), duration = Number(el.dataset.duration);
       while (stack.length && stack[stack.length - 1].level >= level) stack.pop();
       const parent = stack[stack.length - 1] || null;
-      const span = { el, index, level, start, duration, end: start + duration, kind: el.dataset.kind, error: el.dataset.status === 'error', cost: el.dataset.cost === undefined ? null : Number(el.dataset.cost), tokens: Number(el.dataset.tokens || 0), parent, children: [], series: el.dataset.series || parent?.series || 'identity' };
+      const span = { el, index, level, start, duration, end: start + duration, kind: el.dataset.kind, error: el.dataset.status === 'error', cost: el.dataset.cost === undefined ? null : Number(el.dataset.cost), tokens: Number(el.dataset.tokens || 0), parent, children: [] };
       if (parent) parent.children.push(span);
       stack.push(span);
       return span;
@@ -1939,7 +1941,6 @@ PS_KITS.push(function kitD(root, { doc, win, listen, find, emit }) {
     const slowest = spans.filter(span => span.kind !== 'agent').reduce((a, b) => b.duration > a.duration ? b : a);
     for (const span of spans) {
       const bar = span.el.querySelector('.ps-trace-bar');
-      span.el.dataset.series = span.series;
       if (span.children.length) span.el.setAttribute('aria-expanded', String(expanded.has(span.index))); else span.el.dataset.leaf = '';
       span.el.style.setProperty('--x', pct(span.start)); span.el.style.setProperty('--w', `max(var(--s-4), ${pct(span.duration)})`);
       finalLabel(span);
@@ -1947,8 +1948,7 @@ PS_KITS.push(function kitD(root, { doc, win, listen, find, emit }) {
       if (span.error && span.kind !== 'agent') bar.append(node('i', 'ps-i ps-i-trace-x'));
       if (span.kind === 'agent') for (const child of descendants(span)) {
         if (child.kind === 'agent') continue;
-        // Each segment wears the series of the agent that ran the call, so a focused call reads in one color everywhere.
-        const seg = node('i', 'ps-trace-seg'); seg.dataset.kind = child.kind; seg.dataset.series = child.series; if (child.error) seg.dataset.status = 'error';
+        const seg = node('i', 'ps-trace-seg'); seg.dataset.kind = child.kind; if (child.error) seg.dataset.status = 'error';
         seg.style.left = `${(child.start - span.start) / span.duration * 100}%`; seg.style.width = `${child.duration / span.duration * 100}%`; bar.append(seg);
         (child.segs ||= []).push(seg); (span.marks ||= []).push([seg, child]);
       }
@@ -2015,7 +2015,7 @@ PS_KITS.push(function kitD(root, { doc, win, listen, find, emit }) {
         if (retry) parts.push(node('p', 'ps-trace-card-note', `Recovered by the next attempt at +${seconds(retry.start)}, which finished in ${seconds(retry.duration)}.`));
       }
 
-      // Where the span sits inside its parent: siblings faint, this span in its series color.
+      // Where the span sits inside its parent: siblings faint, this span in its ink.
       const scope = s.parent || { start: 0, duration: total, children: spans.filter(span => !span.parent) };
       const place = node('div', 'ps-trace-card-place'), lane = node('span', 'ps-trace-card-lane');
       lane.setAttribute('aria-hidden', 'true');
@@ -2236,7 +2236,7 @@ PS_KITS.push(function kitD(root, { doc, win, listen, find, emit }) {
           for (const seg of span.segs || []) if (phase === 'done') delete seg.dataset.run; else seg.dataset.run = phase;
           if (phase === 'done') { delete span.el.dataset.run; finalLabel(span); bar.style.clipPath = ''; time.style.transform = ''; if (span.error && was === 'running') { const mark = bar.querySelector('.ps-i-trace-x'); if (mark) animate(mark, [{ opacity: 0, transform: 'scale(.25)' }, { opacity: 1, transform: 'none' }], press); } }
           else { span.el.dataset.run = phase; if (phase === 'running') time.replaceChildren(node('span', '', seconds(0))); }
-          if (was === 'pending' && !span.el.hidden) animate(span.el, reveal, settle);
+          if (was === 'pending' && !span.el.hidden) animate(bar, reveal, settle);
         }
         if (phase === 'running') {
           const p = (t - span.start) / span.duration, text = seconds(Math.round((t - span.start) / 100) * 100);
@@ -2292,8 +2292,19 @@ PS_KITS.push(function kitD(root, { doc, win, listen, find, emit }) {
 });
 
 var PS_KITS = PS_KITS || [];
-PS_KITS.push(function kitE(root, { doc, win, listen, find, emit }) {
-  // Pure helpers: roving focus, panel scrolling, route visibility and the menu's starting clip carry no DOM state.
+PS_KITS.push(function kitE(root, { doc, win, listen, find }) {
+  // Pure helpers: they take numbers and strings and touch no DOM.
+  // The view box: one drawing unit per pixel where the frame is smaller than the drawing, centered on what is shown
+  // (the routes and pins), grown to fit it if it is larger than the frame, and kept inside the drawing's extent so the
+  // edge of the drawing never shows. A frame larger than the drawing shows all of it.
+  const viewFor = (frame, shown, extent, pad = 44) => {
+    const [ex, ey, ew, eh] = extent;
+    const x0 = shown.x0 - pad, y0 = shown.y0 - pad, x1 = shown.x1 + pad, y1 = shown.y1 + pad;
+    let vw = Math.max(frame.w, x1 - x0), vh = Math.max(frame.h, y1 - y0);
+    if (vw / vh > frame.w / frame.h) vh = (vw * frame.h) / frame.w; else vw = (vh * frame.w) / frame.h;
+    const place = (center, size, lo, span) => (size >= span ? lo + (span - size) / 2 : Math.min(Math.max(center - size / 2, lo), lo + span - size));
+    return [place((x0 + x1) / 2, vw, ex, ew), place((y0 + y1) / 2, vh, ey, eh), vw, vh].map((n) => Math.round(n * 10) / 10);
+  };
   const stepIndex = (index, key, count) => {
     if (key === 'ArrowDown' || key === 'ArrowRight') return (index + 1) % count;
     if (key === 'ArrowUp' || key === 'ArrowLeft') return (index - 1 + count) % count;
@@ -2301,542 +2312,165 @@ PS_KITS.push(function kitE(root, { doc, win, listen, find, emit }) {
     if (key === 'End') return count - 1;
     return -1;
   };
-  const scrollFor = (top, height, viewTop, viewHeight) => top < viewTop ? top : top + height > viewTop + viewHeight ? top + height - viewHeight : viewTop;
-  const routeState = (route, mode) => route.dataset.amMode === mode ? route.dataset.amRank : 'hidden';
-  const triggerClip = (menuRect, buttonRect) => `inset(0px ${Math.max(0, menuRect.width - buttonRect.width)}px ${Math.max(0, menuRect.height - buttonRect.height)}px 0px round ${buttonRect.height / 2}px)`;
 
-  // Motion follows Kobra's measured timings: reveals and the menu on cubic-bezier(.23,1,.32,1),
-  // the travel-mode label swap on cubic-bezier(.16,1,.3,1). Every animation is tracked so dispose can cancel it.
-  const REVEAL = 'cubic-bezier(.23, 1, .32, 1)';
-  const SWAP = 'cubic-bezier(.16, 1, .3, 1)';
-  const motion = win.matchMedia('(prefers-reduced-motion: reduce)');
-  const running = new Set();
-  const frames = new Set();
-  const observers = new Set();
   const cleanups = [];
-  const play = (el, keyframes, options) => {
-    if (motion.matches || !el || typeof el.animate !== 'function') return null;
-    const animation = el.animate(keyframes, options);
-    running.add(animation);
-    animation.finished.then(() => running.delete(animation), () => running.delete(animation));
-    return animation;
-  };
-  const nextFrame = fn => { const id = win.requestAnimationFrame(() => { frames.delete(id); fn(); }); frames.add(id); };
-  const node = (tag, cls, text) => { const el = doc.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
-  const clamp = (value, low, high) => Math.max(low, Math.min(value, high));
-  // The anchored card sits beside its anchor, right first, then left, then centered over it; vertically it centers
-  // on the anchor (or keeps its top) and is clamped into the free box, so it never leaves the map.
-  const anchorAt = (anchor, size, box, gap, keepTop) => {
-    let x = anchor.right + gap;
-    if (x + size.width > box.right) x = anchor.left - gap - size.width;
-    if (x < box.left) x = clamp((anchor.left + anchor.right - size.width) / 2, box.left, box.right - size.width);
-    const y = clamp(keepTop ?? (anchor.top + anchor.bottom - size.height) / 2, box.top, Math.max(box.top, box.bottom - size.height));
-    return { x, y };
-  };
-  const CARD_MS = 220;
   let serial = 0;
 
   for (const map of find('[data-ps-agent-map]')) {
-    const variant = map.dataset.amVariant;
-    const frame = map.querySelector('[data-am-frame]');
-    const canvas = map.querySelector('.ps-am-canvas');
+    const svg = map.querySelector('.ps-am-drawing');
     const status = map.querySelector('[data-am-status]');
-    const group = map.querySelector('[data-am-places]');
-    const places = [...map.querySelectorAll('[data-am-place]')];
-    const pins = [...map.querySelectorAll('[data-am-pin]')];
-    const routes = [...map.querySelectorAll('[data-am-route]')];
-    const modeButton = map.querySelector('[data-am-mode-button]');
-    const menu = map.querySelector('[data-am-modes]');
-    const options = menu ? [...menu.querySelectorAll('[role="option"]')] : [];
-    const expandButton = map.querySelector('[data-am-expand]');
-    const state = { mode: options.find(o => o.getAttribute('aria-selected') === 'true')?.dataset.amOption ?? null, place: null, expanded: false };
-    // The open detail card, if any: a place's card or a route leg's card. One per map.
-    let open = null;
-    const mine = new Set();
-    const own = animation => { if (animation) mine.add(animation); return animation; };
-    const stop = () => { for (const animation of mine) animation.cancel(); mine.clear(); };
+    const extent = (svg?.dataset.amExtent ?? '').split(/\s+/).map(Number);
+    const settledView = svg?.getAttribute('viewBox');
 
-    const announce = text => { if (status) status.textContent = text; };
-    const report = () => emit(map, 'pagesystem:agent-map', { variant, mode: state.mode, place: state.place, expanded: state.expanded, card: open?.kind ?? null, leg: open?.kind === 'leg' ? open.id : null });
-    // Keyboard-initiated changes land at once: transitions are suspended for the frame that applies them.
-    const instantly = fn => {
-      map.setAttribute('data-am-instant', '');
-      fn();
-      nextFrame(() => nextFrame(() => map.removeAttribute('data-am-instant')));
+    // Frame the drawing on what is shown. Bounds come from the shapes themselves, so a new route needs no numbers.
+    const frame = () => {
+      if (!svg || extent.length !== 4 || extent.some(Number.isNaN)) return;
+      const box = svg.getBoundingClientRect();
+      if (box.width < 1 || box.height < 1) return;
+      const shown = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+      for (const el of svg.querySelectorAll('.ps-am-r:not([data-am-state="off"]), .ps-am-pin')) {
+        const b = el.getBBox();
+        const m = el.transform?.baseVal?.consolidate()?.matrix;
+        const dx = m ? m.e : 0, dy = m ? m.f : 0;
+        shown.x0 = Math.min(shown.x0, b.x + dx); shown.y0 = Math.min(shown.y0, b.y + dy);
+        shown.x1 = Math.max(shown.x1, b.x + b.width + dx); shown.y1 = Math.max(shown.y1, b.y + b.height + dy);
+      }
+      if (!Number.isFinite(shown.x0)) return;
+      svg.setAttribute('viewBox', viewFor({ w: box.width, h: box.height }, shown, extent).join(' '));
     };
+    let pending = 0;
+    const reframe = () => { if (pending) return; pending = win.requestAnimationFrame(() => { pending = 0; frame(); }); };
+    const Observer = win.ResizeObserver;
+    const observer = Observer && svg ? new Observer(reframe) : null;
+    observer?.observe(svg);
+    listen(win, 'resize', reframe);
+    reframe();
 
-    // Routes draw from the origin, the chosen route and its alternative together, as Kobra's do.
-    const draw = (mode, { delay = 0, duration = 600 } = {}) => {
-      for (const route of routes) {
-        if (routeState(route, mode) === 'hidden') continue;
-        const path = map.querySelector(`[data-am-draw="${route.dataset.amRoute}"]`);
-        own(play(path, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration, delay, easing: REVEAL, fill: 'backwards' }));
-      }
-    };
+    const say = (text) => { if (status) status.textContent = text; };
 
-    // Entrance, once the map is first in view: the camera settles, pins rise at 60 and 130ms, controls at 260
-    // and 330ms, cards at 320 and 390ms (500ms each), and the routes draw. Text-bearing controls rise without
-    // fading so their contrast never drops; the map layer fades as well.
-    let observer = null;
-    const entrance = () => {
-      stop();
-      map.removeAttribute('data-am-reveal');
-      own(play(canvas, [{ scale: '1.04' }, { scale: '1' }], { duration: 900, easing: REVEAL }));
-      for (const el of map.querySelectorAll('[data-am-fade]')) {
-        if (el.hidden) continue;
-        own(play(el, [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: Number(el.dataset.amFade), easing: REVEAL, fill: 'backwards' }));
-      }
-      for (const el of map.querySelectorAll('[data-am-rise]')) {
-        own(play(el, [{ transform: 'translateY(4px)' }, { transform: 'none' }], { duration: 500, delay: Number(el.dataset.amRise), easing: REVEAL, fill: 'backwards' }));
-      }
-      if (state.mode) draw(state.mode, { delay: 260 });
-    };
-    // Any interaction before the entrance has played settles the map in its final state.
-    const settle = () => {
-      if (!map.hasAttribute('data-am-reveal')) return;
-      map.removeAttribute('data-am-reveal');
-      observer?.disconnect();
-    };
+    if (map.dataset.amVariant === 'route') {
+      // Route: the travel mode picks the mode's first way; "Take this way" swaps to the other way of the same mode.
+      // Every way's text is already in the markup, so the settled page reads correctly with no script.
+      const legs = [...map.querySelectorAll('.ps-am-leg[data-am-way]')];
+      const routes = [...map.querySelectorAll('.ps-am-r[data-am-way]')];
+      const others = [...map.querySelectorAll('.ps-am-other[data-am-other-of]')];
+      const radios = [...map.querySelectorAll('.ps-am-modes input[type="radio"]')];
+      const time = map.querySelector('[data-am-pin-time]');
+      const routeGroup = map.querySelector('.ps-am-routes');
+      // Radio names must be unique per instance, or two copies of the map on one page would share one group.
+      const name = `am-mode-${++serial}`;
+      const originalName = radios[0]?.name;
+      for (const radio of radios) radio.name = name;
+      let way = legs.find((leg) => !leg.hidden)?.dataset.amWay ?? legs[0]?.dataset.amWay;
 
-    // Places: cards or rows are the roving, focusable choice; pins mirror them for pointer use.
-    const renderPlace = () => {
-      for (const el of places) el.setAttribute('aria-pressed', String(el.dataset.amPlace === state.place));
-      for (const pin of pins) pin.toggleAttribute('data-am-selected', pin.dataset.amPin === state.place);
-    };
-    const reveal = (el, smooth) => {
-      const view = el.closest('[data-am-scroll]');
-      if (!view || view.scrollHeight <= view.clientHeight) return;
-      const top = el.getBoundingClientRect().top - view.getBoundingClientRect().top + view.scrollTop;
-      const next = scrollFor(top, el.offsetHeight, view.scrollTop, view.clientHeight);
-      if (next !== view.scrollTop) view.scrollTo({ top: next, behavior: smooth && !motion.matches ? 'smooth' : 'auto' });
-    };
-    const setTabStop = target => { for (const el of places) el.tabIndex = el === target ? 0 : -1; };
-    const select = (id, { toggle = true, keyboard = false } = {}) => {
-      const next = toggle && state.place === id ? null : id;
-      if (next === state.place) return;
-      settle();
-      state.place = next;
-      if (keyboard) instantly(renderPlace); else renderPlace();
-      const chosen = places.find(el => el.dataset.amPlace === next);
-      if (chosen) { reveal(chosen, !keyboard); setTabStop(chosen); }
-      showCard(next ? { kind: 'place', id: next } : null, { animated: !keyboard });
-      announce(chosen ? `${chosen.dataset.amName} selected` : 'Selection cleared');
-      report();
-    };
-
-    for (const el of places) {
-      listen(el, 'click', event => select(el.dataset.amPlace, { keyboard: event.detail === 0 }));
-      listen(el, 'pointerenter', () => { for (const pin of pins) pin.toggleAttribute('data-am-hover', pin.dataset.amPin === el.dataset.amPlace); });
-      listen(el, 'pointerleave', () => { for (const pin of pins) pin.removeAttribute('data-am-hover'); });
-    }
-    if (group) listen(group, 'keydown', event => {
-      const index = places.indexOf(event.target);
-      if (index < 0) return;
-      const next = stepIndex(index, event.key, places.length);
-      if (next < 0) return;
-      event.preventDefault();
-      setTabStop(places[next]);
-      places[next].focus();
-      reveal(places[next], false);
-    });
-    for (const pin of pins) {
-      listen(pin, 'click', () => select(pin.dataset.amPin));
-      listen(pin, 'pointerenter', () => { for (const el of places) el.toggleAttribute('data-am-hover', el.dataset.amPlace === pin.dataset.amPin); });
-      listen(pin, 'pointerleave', () => { for (const el of places) el.removeAttribute('data-am-hover'); });
-    }
-
-    // Detail card. A place's card says why the agent went there, where it sits in the run's order with the legs
-    // before and after, what was found and how sure the agent is; a leg's card gives from, to, distance, time and
-    // why. On wide frames it anchors beside its pin or leg inside the map, clear of the controls, the stop cards
-    // and the list; on narrow frames, and always in the list layout where the rows lead, it opens under the entry.
-    // Everything is read from the specimen's data attributes and hidden lists and written with textContent.
-    const svg = map.querySelector('.ps-am-map');
-    const cardId = `${svg?.querySelector('title')?.id || 'am'}-card-${serial++}`;
-    const details = new Map([...map.querySelectorAll('[data-am-detail]')].map(dl => [dl.dataset.amDetail, dl]));
-    const legs = [...map.querySelectorAll('[data-am-leg]')];
-    const card = node('div', 'ps-am-detail');
-    card.id = cardId; card.hidden = true; card.dataset.amCard = '';
-    card.setAttribute('role', 'group'); card.setAttribute('aria-labelledby', `${cardId}-title`);
-    frame?.append(card);
-    for (const el of places) { el.setAttribute('aria-expanded', 'false'); el.setAttribute('aria-controls', cardId); }
-    const ghosts = new Set();
-    const placeEl = id => places.find(el => el.dataset.amPlace === id);
-    const nameOf = id => placeEl(id)?.dataset.amName ?? id;
-    const legOf = id => legs.find(leg => leg.dataset.amLeg === id);
-    // A drawn leg is part of the run only while its route is shown for the current mode.
-    const legShown = leg => !leg.hasAttribute('data-am-route') || leg.dataset.amState !== 'hidden';
-    const legAlternative = leg => leg.dataset.amState === 'alternative';
-    const fact = (term, value) => { const row = node('div'); row.append(node('dt', '', term), node('dd', '', value)); return row; };
-    const why = (caption, text, source) => {
-      const group = node('div', 'ps-am-detail-why');
-      group.append(node('p', 'ps-am-detail-caption', caption), node('p', 'ps-am-detail-text', text));
-      if (source) group.append(node('p', 'ps-am-detail-source', `Source · ${source}`));
-      return group;
-    };
-    // Under a place card the leg names only its other end; on its own it names both.
-    const legBody = (leg, id, side) => {
-      const body = node('div', 'ps-am-leg-body'), facts = node('dl', 'ps-am-detail-facts');
-      if (id) body.id = id;
-      if (side !== 'after') facts.append(fact('From', nameOf(leg.dataset.amFrom)));
-      if (side !== 'before') facts.append(fact('To', nameOf(leg.dataset.amTo)));
-      facts.append(fact('Distance', leg.dataset.amDistance), fact('Travel time', leg.dataset.amTime));
-      body.append(facts, why('Why this way', leg.dataset.amWhy));
-      return body;
-    };
-    const header = (caption, title) => {
-      const head = node('header'), heading = node('p', 'ps-am-detail-title', title);
-      heading.id = `${cardId}-title`;
-      head.append(node('p', 'ps-am-detail-caption', caption), heading);
-      return head;
-    };
-    // A leg row in a place card is a disclosure: its button names the leg, the region under it holds the leg's card.
-    const legRow = (leg, side) => {
-      const item = node('li'), button = node('button', 'ps-am-leg'), label = node('span', 'ps-am-leg-label'), chevron = node('span', 'ps-i ps-i-chevron');
-      const bodyId = `${cardId}-leg-${leg.dataset.amLeg}`, body = legBody(leg, bodyId, side);
-      button.type = 'button'; button.dataset.amLegToggle = leg.dataset.amLeg;
-      button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-controls', bodyId);
-      chevron.setAttribute('aria-hidden', 'true');
-      const name = leg.dataset.amName || (side === 'before' ? `From ${nameOf(leg.dataset.amFrom)}` : `To ${nameOf(leg.dataset.amTo)}`);
-      label.append(node('span', 'ps-am-leg-name', name));
-      if (legAlternative(leg)) label.append(node('span', 'ps-am-detail-caption', 'Alternative'));
-      button.append(node('span', 'ps-am-detail-caption', side === 'before' ? 'Before' : 'After'), label, node('span', 'ps-am-leg-meta', `${leg.dataset.amDistance} · ${leg.dataset.amTime}`), chevron);
-      body.hidden = true;
-      item.append(button, body);
-      return item;
-    };
-    // The shown route comes before its alternative.
-    const byRank = (a, b) => Number(legAlternative(a)) - Number(legAlternative(b));
-    const fillPlace = id => {
-      const at = places.findIndex(el => el.dataset.amPlace === id), dl = details.get(id);
-      const before = legs.filter(leg => leg.dataset.amTo === id && legShown(leg)).sort(byRank), after = legs.filter(leg => leg.dataset.amFrom === id && legShown(leg)).sort(byRank);
-      const end = !before.length ? ' · First stop' : !after.length ? ' · Last stop' : '';
-      const parts = [header(`Stop ${at + 1} of ${places.length}${end}`, nameOf(id))];
-      if (dl) parts.push(why('Why the agent went here', dl.dataset.amWhy, dl.dataset.amSource));
-      // The run's order: one mark per stop, then the legs into and out of this one.
-      const route = node('div', 'ps-am-detail-route'), stops = node('span', 'ps-am-detail-stops'), list = node('ul', 'ps-am-legs');
-      stops.setAttribute('aria-hidden', 'true');
-      places.forEach((_, i) => { const mark = node('i'); mark.dataset.state = i < at ? 'done' : i === at ? 'current' : 'next'; stops.append(mark); });
-      for (const leg of before) list.append(legRow(leg, 'before'));
-      for (const leg of after) list.append(legRow(leg, 'after'));
-      route.append(stops);
-      if (list.children.length) route.append(list);
-      parts.push(route);
-      if (dl) {
-        const found = node('div', 'ps-am-detail-found'), facts = node('dl', 'ps-am-detail-facts');
-        for (const row of dl.children) facts.append(fact(row.querySelector('dt').textContent, row.querySelector('dd').textContent));
-        const confidence = clamp(Number(dl.dataset.amConfidence) || 0, 0, 100);
-        const meter = node('dl', 'ps-am-detail-meter'), row = node('div'), value = node('dd'), track = node('span', 'ps-am-meter-track'), fill = node('i');
-        track.setAttribute('aria-hidden', 'true'); fill.style.width = `${confidence}%`; track.append(fill);
-        value.append(track, node('span', 'ps-am-meter-value', `${confidence}%`));
-        row.append(node('dt', '', 'Confidence'), value); meter.append(row);
-        found.append(facts, meter);
-        parts.push(found);
-      }
-      return parts;
-    };
-    const fillLeg = id => {
-      const leg = legOf(id);
-      const title = leg.dataset.amName || `${nameOf(leg.dataset.amFrom)} to ${nameOf(leg.dataset.amTo)}`;
-      return [header(legAlternative(leg) ? 'Route leg · alternative' : 'Route leg', title), legBody(leg)];
-    };
-    const fill = () => {
-      const sheet = node('div', 'ps-am-sheet');
-      sheet.append(...(open.kind === 'place' ? fillPlace(open.id) : fillLeg(open.id)));
-      card.replaceChildren(sheet);
-    };
-
-    const anchorRect = () => {
-      if (open.kind === 'place') {
-        const pin = pins.find(p => p.dataset.amPin === open.id);
-        return pin?.getBoundingClientRect() ?? null;
-      }
-      // A leg anchors at the middle of its drawn line, mapped from the drawing's coordinates to the screen.
-      const path = legOf(open.id).querySelector('.am-line'), box = svg.getBoundingClientRect(), view = svg.viewBox.baseVal;
-      const mid = path.getPointAtLength(path.getTotalLength() / 2);
-      const x = box.left + (mid.x - view.x) / view.width * box.width, y = box.top + (mid.y - view.y) / view.height * box.height;
-      return { left: x, right: x, top: y, bottom: y };
-    };
-    const ownerOf = () => placeEl(open.kind === 'place' ? open.id : legOf(open.id).dataset.amTo);
-    // The breakpoint lives in kit-e.css as --am-anchor, so script and styles switch together.
-    const anchored = () => variant !== 'list' && win.getComputedStyle(frame).getPropertyValue('--am-anchor').trim() === '1';
-    const place = ({ keepTop = false } = {}) => {
-      const wide = anchored(), anchor = wide ? anchorRect() : null;
-      if (!wide || !anchor) {
-        card.dataset.amPlacement = 'inline';
-        for (const prop of ['left', 'top', '--am-room', '--am-max']) card.style.removeProperty(prop);
-        const owner = ownerOf();
-        if (owner && owner.nextElementSibling !== card) owner.after(card);
-        return;
-      }
-      if (card.parentElement !== frame || card.dataset.amPlacement !== 'anchored') { card.dataset.amPlacement = 'anchored'; frame.append(card); }
-      const f = frame.getBoundingClientRect(), stage = frame.querySelector('.ps-am-stage').getBoundingClientRect();
-      const tools = frame.querySelector('.ps-am-tools')?.getBoundingClientRect(), panel = frame.querySelector('.ps-am-panel'), stops = frame.querySelector('.ps-am-cards');
-      const pad = tools ? tools.left - f.left : 12;
-      const box = {
-        left: pad,
-        right: (panel ? panel.getBoundingClientRect().left : stage.right) - f.left - pad,
-        top: (tools ? tools.bottom : stage.top) - f.top + pad,
-        bottom: (stops ? stops.getBoundingClientRect().top : stage.bottom) - f.top - pad,
-      };
-      const relative = { left: anchor.left - f.left, right: anchor.right - f.left, top: anchor.top - f.top, bottom: anchor.bottom - f.top };
-      card.style.setProperty('--am-room', `${Math.max(0, box.right - box.left)}px`);
-      card.style.setProperty('--am-max', `${Math.max(0, box.bottom - box.top)}px`);
-      // Without room for the full card on either side, it narrows to the wider side rather than cover its anchor.
-      const side = Math.max(box.right - relative.right, relative.left - box.left) - pad;
-      const narrowest = parseFloat(win.getComputedStyle(card).getPropertyValue('--am-min-width')) * parseFloat(win.getComputedStyle(doc.documentElement).fontSize) || 0;
-      if (card.offsetWidth > side && side >= narrowest) card.style.setProperty('--am-room', `${side}px`);
-      const size = { width: card.offsetWidth, height: card.offsetHeight };
-      const { x, y } = anchorAt(relative, size, box, pad, keepTop ? parseFloat(card.style.top) : undefined);
-      card.style.left = `${x}px`; card.style.top = `${y}px`;
-    };
-    const growFrames = height => [{ height: '0px', opacity: .72, overflow: 'hidden' }, { height: `${height}px`, opacity: 1, overflow: 'hidden' }];
-    const leave = () => {
-      const ghost = card.cloneNode(true);
-      for (const attr of ['id', 'role', 'aria-labelledby', 'data-am-card']) ghost.removeAttribute(attr);
-      for (const el of ghost.querySelectorAll('[id]')) el.removeAttribute('id');
-      ghost.setAttribute('aria-hidden', 'true'); ghost.inert = true;
-      card.after(ghost); ghosts.add(ghost);
-      const gone = () => { ghosts.delete(ghost); ghost.remove(); };
-      const out = play(ghost.firstChild, growFrames(card.firstChild.offsetHeight).reverse(), { duration: CARD_MS, easing: REVEAL });
-      if (out) out.finished.then(gone, gone); else gone();
-    };
-    const paintRoutes = () => { for (const route of routes) route.toggleAttribute('data-am-open', open?.kind === 'leg' && open.id === route.dataset.amLeg); };
-    // Pointer changes grow the card open and collapse a stand-in where it was; keyboard changes land at once.
-    const showCard = (next, { animated = false } = {}) => {
-      if (!frame) return;
-      const was = card.hidden ? null : open;
-      const same = was && next && was.kind === next.kind && was.id === next.id;
-      const owner = was && ownerOf(), focused = card.contains(doc.activeElement);
-      if (animated && was && !same && card.firstChild) leave();
-      open = next;
-      for (const el of places) el.setAttribute('aria-expanded', String(open?.kind === 'place' && el.dataset.amPlace === open.id));
-      paintRoutes();
-      card.hidden = !open;
-      if (focused && !same) (open && open.kind === 'place' ? placeEl(open.id) : owner)?.focus();
-      if (!open) return;
-      fill();
-      place();
-      if (animated && !same) {
-        own(play(card.firstChild, growFrames(card.firstChild.offsetHeight), { duration: CARD_MS, easing: REVEAL }));
-      }
-    };
-    // Redraws the open card in place after the run changes, without motion.
-    const refreshCard = () => {
-      if (!open || card.hidden) return;
-      if (open.kind === 'leg' && !legShown(legOf(open.id))) { showCard(null); return; }
-      fill(); place();
-    };
-    listen(card, 'click', event => {
-      const button = event.target.closest('[data-am-leg-toggle]');
-      if (!button) return;
-      const opening = button.getAttribute('aria-expanded') !== 'true';
-      for (const other of card.querySelectorAll('[data-am-leg-toggle]')) {
-        other.setAttribute('aria-expanded', String(opening && other === button));
-        doc.getElementById(other.getAttribute('aria-controls')).hidden = !(opening && other === button);
-      }
-      const body = doc.getElementById(button.getAttribute('aria-controls'));
-      if (card.dataset.amPlacement === 'anchored') place({ keepTop: true });
-      if (opening) {
-        if (event.detail > 0) own(play(body, growFrames(body.offsetHeight), { duration: CARD_MS, easing: REVEAL }));
-        const sheet = card.firstChild;
-        if (sheet.scrollHeight > sheet.clientHeight) {
-          const top = body.getBoundingClientRect().top - sheet.getBoundingClientRect().top + sheet.scrollTop;
-          sheet.scrollTop = scrollFor(top - button.offsetHeight, body.offsetHeight + button.offsetHeight, sheet.scrollTop, sheet.clientHeight);
+      const show = (next, { announce } = {}) => {
+        const leg = legs.find((l) => l.dataset.amWay === next);
+        if (!leg) return;
+        way = next;
+        const mode = leg.dataset.amMode;
+        for (const l of legs) l.hidden = l !== leg;
+        for (const o of others) o.hidden = o.dataset.amOtherOf !== way;
+        for (const r of routes) {
+          const rmode = legs.find((l) => l.dataset.amWay === r.dataset.amWay)?.dataset.amMode;
+          r.dataset.amState = r.dataset.amWay === way ? 'chosen' : rmode === mode ? 'other' : 'off';
         }
+        // The chosen line is drawn last, over the other way where they share a street.
+        const chosen = routes.find((r) => r.dataset.amWay === way);
+        if (chosen && routeGroup) routeGroup.append(chosen);
+        if (time) time.textContent = leg.dataset.amTime ?? '';
+        for (const radio of radios) radio.checked = radio.value === mode;
+        reframe();
+        if (announce) {
+          const head = leg.querySelector('.ps-am-leg-head')?.textContent.trim() ?? '';
+          const via = leg.querySelector('.ps-am-leg-via')?.textContent.trim() ?? '';
+          say(`Shown: ${head}. ${via}.`);
+        }
+      };
+      for (const radio of radios) listen(radio, 'change', () => {
+        const first = legs.find((l) => l.dataset.amMode === radio.value);
+        if (first) show(first.dataset.amWay, { announce: true });
+      });
+      for (const button of map.querySelectorAll('[data-am-take]')) listen(button, 'click', () => {
+        show(button.dataset.amTake, { announce: true });
+        // The button that was pressed is now hidden; keep focus on the one that took its place.
+        map.querySelector(`.ps-am-other:not([hidden]) [data-am-take]`)?.focus();
+      });
+      // Pointing at a stop marks its pin.
+      for (const stop of map.querySelectorAll('.ps-am-stop[data-am-stop]')) {
+        const pin = svg?.querySelector(`.ps-am-pin[data-am-stop="${stop.dataset.amStop}"]`);
+        listen(stop, 'pointerenter', () => pin?.setAttribute('data-am-hot', ''));
+        listen(stop, 'pointerleave', () => pin?.removeAttribute('data-am-hot'));
       }
-      const leg = legOf(button.dataset.amLegToggle);
-      announce(opening ? `${button.querySelector('.ps-am-leg-name').textContent}, ${leg.dataset.amDistance}, ${leg.dataset.amTime}` : 'Leg closed');
-    });
-    // Drawn legs take pointer choices on a wide, invisible stroke; the same legs are reachable by keyboard from the
-    // place cards, so the map itself stays an image to assistive technology.
-    const hits = [];
-    for (const route of routes) {
-      if (!route.hasAttribute('data-am-leg')) continue;
-      const line = route.querySelector('.am-line');
-      if (!line) continue;
-      const hit = line.cloneNode(false);
-      hit.setAttribute('class', 'am-hit');
-      route.append(hit); hits.push(hit);
-      listen(route, 'click', () => {
-        settle();
-        const chosen = open?.kind === 'leg' && open.id === route.dataset.amLeg && !card.hidden;
-        showCard(chosen ? null : { kind: 'leg', id: route.dataset.amLeg }, { animated: true });
-        const leg = legOf(route.dataset.amLeg);
-        announce(chosen ? 'Leg closed' : `${leg.dataset.amName}, ${leg.dataset.amDistance}, ${leg.dataset.amTime}`);
-        report();
+      show(way);
+      cleanups.push(() => {
+        for (const radio of radios) if (originalName) radio.name = originalName;
+        for (const pin of map.querySelectorAll('[data-am-hot]')) pin.removeAttribute('data-am-hot');
       });
-    }
-    if (frame && typeof win.ResizeObserver === 'function') {
-      let width = 0, height = 0;
-      const resized = new win.ResizeObserver(() => {
-        const box = frame.getBoundingClientRect();
-        if (box.width === width && box.height === height) return;
-        width = box.width; height = box.height;
-        if (open && !card.hidden) place({ keepTop: false });
-      });
-      resized.observe(frame);
-      observers.add(resized);
-    }
+    } else {
+      // Places: a row and its pin are one place. Choosing either selects it everywhere; arrows move between rows with
+      // one tab stop; Escape clears the selection.
+      const rows = [...map.querySelectorAll('.ps-am-place[data-am-place]')];
+      const pins = [...(svg?.querySelectorAll('.ps-am-pin[data-am-place]') ?? [])];
+      const label = svg?.querySelector('[data-am-picked-label]');
+      const pinOf = (id) => pins.find((p) => p.dataset.amPlace === id);
+      const rowOf = (id) => rows.find((r) => r.dataset.amPlace === id);
+      let picked = null;
+      const rove = (row) => { for (const r of rows) r.tabIndex = r === row ? 0 : -1; };
+      rove(rows[0]);
 
-    // Travel mode: a listbox of options; the map, destination time and card note follow the choice.
-    const setMode = (mode, { animate }) => {
-      const option = options.find(o => o.dataset.amOption === mode);
-      if (!option || mode === state.mode) return;
-      settle();
-      const before = modeButton.getBoundingClientRect().width;
-      state.mode = mode;
-      for (const o of options) o.setAttribute('aria-selected', String(o === option));
-      for (const route of routes) route.dataset.amState = routeState(route, mode);
-      for (const alt of map.querySelectorAll('[data-am-alt]')) alt.hidden = alt.dataset.amAlt !== mode;
-      for (const el of map.querySelectorAll('[data-am-mode-label]')) el.textContent = option.dataset.amLabel;
-      for (const el of map.querySelectorAll('[data-am-mode-time]')) el.textContent = option.dataset.amTime;
-      for (const el of map.querySelectorAll('[data-am-mode-note]')) el.textContent = option.dataset.amNote;
-      for (const el of map.querySelectorAll('[data-am-mode-distance]')) el.textContent = option.dataset.amDistance;
-      for (const el of map.querySelectorAll('[data-am-route-summary]')) el.textContent = option.dataset.amSummary;
-      const icon = map.querySelector('[data-am-mode-icon]');
-      if (icon) icon.className = `ps-i ${option.dataset.amIcon}`;
-      refreshCard();
-      if (animate) {
-        // Kobra: the trigger resizes and its label fades in over 180ms; old routes go at once and the new ones draw.
-        // The alternative's time label follows once its line has mostly drawn.
-        stop();
-        const after = modeButton.getBoundingClientRect().width;
-        own(play(modeButton, [{ width: `${before}px` }, { width: `${after}px` }], { duration: 180, easing: SWAP }));
-        for (const el of modeButton.querySelectorAll('[data-am-mode-label], .ps-am-control-time, [data-am-mode-icon]')) own(play(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: SWAP }));
-        draw(mode);
-        for (const alt of map.querySelectorAll('[data-am-alt]')) if (!alt.hidden) own(play(alt, [{ opacity: 0 }, { opacity: 1 }], { duration: 180, delay: 480, easing: REVEAL, fill: 'backwards' }));
-      }
-      announce(`${option.dataset.amLabel} route, ${option.dataset.amTime}, ${option.dataset.amDistance}`);
-      report();
-    };
-    let menuMotion = [];
-    const stopMenu = () => { for (const animation of menuMotion) animation?.cancel(); menuMotion = []; };
-    const openMenu = ({ keyboard }) => {
-      stopMenu();
-      const show = () => { menu.hidden = false; modeButton.setAttribute('aria-expanded', 'true'); };
-      if (keyboard) instantly(show); else show();
-      if (keyboard) (options.find(o => o.getAttribute('aria-selected') === 'true') ?? options[0]).focus();
-      // Kobra: the list grows out of the trigger it covers, 200ms.
-      else menuMotion = [play(menu, [{ clipPath: triggerClip(menu.getBoundingClientRect(), modeButton.getBoundingClientRect()) }, { clipPath: 'inset(0px round 12px)' }], { duration: 200, easing: REVEAL })];
-    };
-    const closeMenu = ({ restore, keyboard = false }) => {
-      if (menu.hidden || modeButton.getAttribute('aria-expanded') === 'false') return;
-      stopMenu();
-      if (keyboard) instantly(() => modeButton.setAttribute('aria-expanded', 'false')); else modeButton.setAttribute('aria-expanded', 'false');
-      if (restore) modeButton.focus();
-      // Kobra: the clip returns to the trigger over 240ms while the list fades out after 130ms.
-      const shrink = keyboard ? null : play(menu, [{ clipPath: 'inset(0px round 12px)' }, { clipPath: triggerClip(menu.getBoundingClientRect(), modeButton.getBoundingClientRect()) }], { duration: 240, easing: REVEAL });
-      if (!shrink) { menu.hidden = true; return; }
-      menuMotion = [shrink, play(menu, [{ opacity: 1 }, { opacity: 0 }], { duration: 110, delay: 130, easing: 'ease-out', fill: 'forwards' })];
-      shrink.finished.then(() => { menu.hidden = true; stopMenu(); }, () => {});
-    };
-    if (modeButton && menu) {
-      listen(modeButton, 'click', event => {
-        // A keyboard activation reports detail 0; it opens without motion and moves focus into the list.
-        const keyboard = event.detail === 0;
-        if (modeButton.getAttribute('aria-expanded') !== 'true') openMenu({ keyboard }); else closeMenu({ restore: false, keyboard });
-      });
-      listen(modeButton, 'keydown', event => {
-        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-        event.preventDefault();
-        openMenu({ keyboard: true });
-      });
-      for (const option of options) listen(option, 'click', event => {
-        const keyboard = event.detail === 0;
-        setMode(option.dataset.amOption, { animate: !keyboard });
-        closeMenu({ restore: true, keyboard });
-      });
-      listen(menu, 'keydown', event => {
-        const index = options.indexOf(doc.activeElement);
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          if (index >= 0) setMode(options[index].dataset.amOption, { animate: false });
-          closeMenu({ restore: true, keyboard: true });
-        } else if (event.key === 'Escape') {
-          event.preventDefault();
-          event.stopPropagation();
-          closeMenu({ restore: true, keyboard: true });
-        } else if (event.key === 'Tab') {
-          closeMenu({ restore: false, keyboard: true });
-        } else {
-          const next = stepIndex(Math.max(index, 0), event.key, options.length);
+      const pick = (id) => {
+        picked = picked === id ? null : id;
+        for (const r of rows) r.setAttribute('aria-pressed', String(r.dataset.amPlace === picked));
+        for (const p of pins) p.toggleAttribute('data-am-picked', p.dataset.amPlace === picked);
+        const row = picked ? rowOf(picked) : null;
+        if (label) {
+          const pin = picked ? pinOf(picked) : null;
+          const m = pin?.transform?.baseVal?.consolidate()?.matrix;
+          label.hidden = !m;
+          if (m) {
+            label.textContent = row.querySelector('b')?.textContent ?? '';
+            label.setAttribute('x', String(m.e + 18)); label.setAttribute('y', String(m.f + 5));
+          }
+        }
+        if (row) rove(row);
+        say(row ? `Selected ${row.querySelector('b')?.textContent}, ${rows.indexOf(row) + 1} of ${rows.length}.` : 'Selection cleared.');
+      };
+      for (const row of rows) {
+        const pin = pinOf(row.dataset.amPlace);
+        listen(row, 'click', () => pick(row.dataset.amPlace));
+        listen(row, 'pointerenter', () => pin?.setAttribute('data-am-hot', ''));
+        listen(row, 'pointerleave', () => pin?.removeAttribute('data-am-hot'));
+        listen(row, 'keydown', (event) => {
+          const next = stepIndex(rows.indexOf(row), event.key, rows.length);
           if (next < 0) return;
           event.preventDefault();
-          options[next].focus();
-        }
+          rove(rows[next]); rows[next].focus();
+        });
+      }
+      // Pins are pointer shortcuts; the rows are the accessible way to every place.
+      for (const pin of pins) {
+        const row = rowOf(pin.dataset.amPlace);
+        listen(pin, 'click', () => { pick(pin.dataset.amPlace); row?.scrollIntoView({ block: 'nearest' }); });
+        listen(pin, 'pointerenter', () => row?.setAttribute('data-am-hot', ''));
+        listen(pin, 'pointerleave', () => row?.removeAttribute('data-am-hot'));
+      }
+      listen(map, 'keydown', (event) => { if (event.key === 'Escape' && picked) { pick(picked); } });
+      cleanups.push(() => {
+        for (const r of rows) { r.setAttribute('aria-pressed', 'false'); r.removeAttribute('tabindex'); r.removeAttribute('data-am-hot'); }
+        for (const p of pins) { p.removeAttribute('data-am-picked'); p.removeAttribute('data-am-hot'); }
+        if (label) label.hidden = true;
       });
-      listen(doc, 'pointerdown', event => { if (!menu.parentElement.contains(event.target)) closeMenu({ restore: false }); });
     }
 
-    // Expand: the frame becomes a sheet over the page; the button keeps focus and names the next action.
-    const setExpanded = (expanded, { keyboard = false } = {}) => {
-      if (!expandButton || expanded === state.expanded) return;
-      settle();
-      state.expanded = expanded;
-      // Hold the figure's height while the frame is lifted out of flow, so the page does not jump.
-      frame.parentElement.style.minHeight = expanded ? `${frame.parentElement.offsetHeight}px` : '';
-      const apply = () => frame.toggleAttribute('data-am-expanded', expanded);
-      if (keyboard) instantly(apply); else apply();
-      expandButton.setAttribute('aria-label', expanded ? 'Collapse map' : 'Expand map');
-      expandButton.querySelector('[data-am-expand-icon]').className = `ps-i ${expanded ? 'ps-i-collapse' : 'ps-i-expand'}`;
-      // An anchored card is measured again once the sheet has settled at full scale.
-      if (expanded && !keyboard) own(play(frame, [{ opacity: 0, scale: '.98' }, { opacity: 1, scale: '1' }], { duration: 200, easing: REVEAL }))?.finished.then(() => { if (open && !card.hidden) place(); }, () => {});
-      announce(expanded ? 'Map expanded' : 'Map collapsed');
-      report();
-    };
-    if (expandButton) {
-      listen(expandButton, 'click', event => setExpanded(!state.expanded, { keyboard: event.detail === 0 }));
-      listen(doc, 'pointerdown', event => { if (state.expanded && !frame.contains(event.target)) setExpanded(false); });
-    }
-
-    listen(map, 'keydown', event => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
-      if (state.expanded) { setExpanded(false, { keyboard: true }); expandButton.focus(); }
-      else if (state.place) select(null, { toggle: false, keyboard: true });
-      else if (open && !card.hidden) { showCard(null); report(); }
-      else return;
-      event.preventDefault();
-    });
-    // A host can replay the entrance by dispatching this event on the component.
-    listen(map, 'pagesystem:agent-map-replay', entrance);
-
-    // The entrance waits until the map is first a third in view; without motion or an observer, nothing waits.
-    if (!motion.matches && typeof win.IntersectionObserver === 'function') {
-      map.setAttribute('data-am-reveal', 'pending');
-      observer = new win.IntersectionObserver(entries => {
-        if (!entries.some(entry => entry.isIntersecting)) return;
-        observer.disconnect();
-        if (map.getAttribute('data-am-reveal') === 'pending') entrance();
-      }, { threshold: .35 });
-      observer.observe(frame);
-      observers.add(observer);
-    }
     cleanups.push(() => {
-      stop();
-      stopMenu();
-      for (const attr of ['data-am-reveal', 'data-am-instant']) map.removeAttribute(attr);
-      for (const el of map.querySelectorAll('[data-am-hover]')) el.removeAttribute('data-am-hover');
-      if (menu) { menu.hidden = true; modeButton.setAttribute('aria-expanded', 'false'); }
-      frame?.removeAttribute('data-am-expanded');
-      if (frame) frame.parentElement.style.minHeight = '';
-      card.remove();
-      for (const ghost of ghosts) ghost.remove();
-      ghosts.clear();
-      for (const hit of hits) hit.remove();
-      for (const route of routes) route.removeAttribute('data-am-open');
-      for (const el of places) { el.removeAttribute('aria-expanded'); el.removeAttribute('aria-controls'); }
+      observer?.disconnect();
+      if (pending) win.cancelAnimationFrame(pending);
+      if (svg && settledView) svg.setAttribute('viewBox', settledView);
+      if (status) status.textContent = '';
     });
   }
 
-  return () => {
-    for (const observer of observers) observer.disconnect();
-    observers.clear();
-    for (const id of frames) win.cancelAnimationFrame(id);
-    frames.clear();
-    for (const animation of running) animation.cancel();
-    running.clear();
-    for (const cleanup of cleanups) cleanup();
-  };
+  return () => { for (const cleanup of cleanups.splice(0)) cleanup(); };
 });
 
 var PS_KITS = PS_KITS || [];

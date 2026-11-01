@@ -172,7 +172,11 @@
 
     // 4. Targets: WCAG 2.2's 24px floor is a failure; under the house target (36 fine, 44 coarse) is a warning.
     //    A link inside a sentence is exempt, as WCAG allows.
-    const targets = [...document.querySelectorAll(interactive)].filter((el) => visible(el) && !inlineInText(el));
+    // A box made focusable only so a keyboard can scroll it (tabindex on an overflow container, no role, not a native
+    // control) is scrolled, not pressed: it is not a target.
+    const native = 'a[href],button,input,select,textarea,summary,[role]';
+    const scrollStop = (el) => !el.matches(native) && /(auto|scroll)/.test(getComputedStyle(el).overflowX + getComputedStyle(el).overflowY);
+    const targets = [...document.querySelectorAll(interactive)].filter((el) => visible(el) && !inlineInText(el) && !scrollStop(el));
     const boxes = targets.map((el) => el.getBoundingClientRect());
     // WCAG 2.5.8's spacing exception: an undersized target passes if a 24px circle on its center meets no other
     // target's 24px circle (centers at least 24px apart) and no other target's box.

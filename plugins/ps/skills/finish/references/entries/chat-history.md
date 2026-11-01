@@ -13,7 +13,7 @@ Native behavior: chat-history. It needs pagesystem.js (see ../implementation.md)
 ## content
 
 - Conversation titles with their time or date, grouped as Today, Yesterday, Previous 7 days and Earlier.
-- The selected conversation's transcript: the person's questions as bubbles and the replies as plain text.
+- The selected conversation's transcript: each of the person's questions under a quiet You label in full ink, and the replies as plain text at the same edge.
 - A count of conversations and search matches, and a status line that names what was renamed or deleted.
 - A label that the conversations are sample data and nothing is stored or sent.
 - Each row has a details disclosure showing the last two turns trimmed, the model, the token split and cost, the files and tools used, and when it was last active.

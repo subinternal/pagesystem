@@ -64,7 +64,7 @@ One line per entry. Read only the entry files you need: each holds that entry's 
 - [code-block](entries/code-block.md): A file excerpt with a filename header, language label, line numbers, restrained highlighting, copy, line wrapping and collapse for long code.
 - [crm-table](entries/crm-table.md): Sort, search and select accounts in one grid with owners, pipeline, win odds and recent activity.
 - [trace-waterfall](entries/trace-waterfall.md): Follow one agent run on a shared timeline: nested steps, their timing and cost, and the detail of any span.
-- [agent-map](entries/agent-map.md): An agent answer that shows the places or route it found on an authored map, with the travel mode above the map and the stops on cards.
+- [agent-map](entries/agent-map.md): An agent answer that draws the route or places it found as a diagram beside an itinerary that names every stop and leg in text.
 - [kpi-card](entries/kpi-card.md): One measure: its caption, the latest figure, the change against the previous period and a sparkline of the period behind it.
 - [kpi-strip](entries/kpi-strip.md): Three to five measures on one shared period, with the chosen measure's trend drawn against the previous period below.
 - [goal-progress](entries/goal-progress.md): Progress against a set of goals: a unit meter summary, then each goal's bullet bar with its target, the pace expected by today and a status in words.
